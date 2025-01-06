@@ -1,4 +1,4 @@
-# Boe Resumido
+# BOE Resumido
 
 Este proyecto busca realizar resúmenes del Boletín Oficial del Estado de España empleando Inteligencia Artificial. Para ello, se realiza técnicas de scraping y consultas a la API de [DeepSeek](https://www.deepseek.com), un potente LLM de código abierto.
 
