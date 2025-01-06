@@ -1,0 +1,33 @@
+@import "./mixins.scss";
+
+h1 {
+  @include text-heading-h1;
+}
+
+h2 {
+  @include text-heading-h2;
+}
+
+h3 {
+  @include text-heading-h3;
+}
+
+h4 {
+  @include text-heading-h4;
+}
+
+h5 {
+  @include text-heading-h5;
+}
+
+h6 {
+  @include text-heading-h6;
+}
+
+p {
+  @include text-paragraph;
+}
+
+a {
+  @include text-link;
+}
