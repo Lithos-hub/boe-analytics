@@ -23,6 +23,9 @@
           </ul>
         </Card>
       </article>
+      <article class="col-span-3">
+        <Card> Graphic card </Card>
+      </article>
     </section>
   </div>
 </template>
@@ -32,7 +35,7 @@ const todayDate = new Date().toLocaleDateString();
 </script>
 
 <style scoped lang="scss">
-@import "@/assets/scss/main.scss";
+@use "@/assets/scss/main.scss" as *;
 
 .Home {
   &__wrapper {

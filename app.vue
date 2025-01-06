@@ -1,5 +1,15 @@
 <template>
-  <div class="bg-slate-950 text-white/80">
-    <NuxtPage />
+  <div class="text-white/80">
+    <Navbar />
+    <Container>
+      <NuxtPage />
+    </Container>
   </div>
 </template>
+
+<style lang="scss">
+html,
+body {
+  @apply bg-dark-1;
+}
+</style>
