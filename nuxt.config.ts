@@ -9,4 +9,10 @@ export default defineNuxtConfig({
       title: "BOE Resumido",
     },
   },
+  colorMode: {
+    preference: "dark",
+  },
+  tailwindcss: {
+    exposeConfig: true,
+  },
 });
