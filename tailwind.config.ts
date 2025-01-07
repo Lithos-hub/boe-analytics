@@ -1,12 +1,13 @@
 import type { Config } from "tailwindcss";
+import colors from "tailwindcss/colors";
 
 export default <Partial<Config>>{
   theme: {
     extend: {
       colors: {
-        dark: {
-          1: "#0B0A1C",
-        },
+        dark: colors.stone,
+        primary: colors.indigo,
+        secondary: colors.pink,
       },
     },
   },

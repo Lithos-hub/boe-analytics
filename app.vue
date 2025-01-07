@@ -5,6 +5,7 @@
       <NuxtPage />
     </Container>
 
-    <BlurBackground />
+    <PatternBackground />
+    <!-- <BlurBackground /> -->
   </div>
 </template>
