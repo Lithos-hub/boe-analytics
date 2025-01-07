@@ -4,12 +4,7 @@
     <Container>
       <NuxtPage />
     </Container>
+
+    <BlurBackground />
   </div>
 </template>
-
-<style lang="scss">
-html,
-body {
-  @apply bg-dark-1;
-}
-</style>
