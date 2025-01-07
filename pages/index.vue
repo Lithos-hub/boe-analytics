@@ -3,24 +3,28 @@
     <section class="grid grid-cols-12 gap-5">
       <article class="col-span-9">
         <Card>
-          <h5>BOE de hoy - {{ todayDate }}</h5>
+          <h5>Lo más reciente - {{ boeDate }}</h5>
 
-          <strong>Principales puntos:</strong>
+          <hr class="my-5 border border-primary/10" />
 
-          <ul>
-            <li>
-              Punto 1. Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Quis a doloribus corporis dolore eligendi.
-            </li>
-            <li>
-              Punto 2. Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Quis a doloribus corporis dolore eligendi.
-            </li>
-            <li>
-              Punto 3. Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Quis a doloribus corporis dolore eligendi.
-            </li>
-          </ul>
+          <div class="flex flex-col gap-5">
+            <strong>Principales puntos:</strong>
+
+            <ul>
+              <li>
+                Punto 1. Lorem ipsum dolor sit amet consectetur adipisicing
+                elit. Quis a doloribus corporis dolore eligendi.
+              </li>
+              <li>
+                Punto 2. Lorem ipsum dolor sit amet consectetur adipisicing
+                elit. Quis a doloribus corporis dolore eligendi.
+              </li>
+              <li>
+                Punto 3. Lorem ipsum dolor sit amet consectetur adipisicing
+                elit. Quis a doloribus corporis dolore eligendi.
+              </li>
+            </ul>
+          </div>
         </Card>
       </article>
       <article class="col-span-3">
@@ -31,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-const todayDate = new Date().toLocaleDateString();
+const boeDate = "lunes 6 de enero de 2025";
 </script>
 
 <style scoped lang="scss">
