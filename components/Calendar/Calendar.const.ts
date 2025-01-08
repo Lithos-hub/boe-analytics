@@ -1,62 +1,62 @@
 export const months = [
   {
-    name: "Enero",
+    name: 'Enero',
     id: 1,
   },
   {
-    name: "Febrero",
+    name: 'Febrero',
     id: 2,
   },
   {
-    name: "Marzo",
+    name: 'Marzo',
     id: 3,
   },
   {
-    name: "Abril",
+    name: 'Abril',
     id: 4,
   },
   {
-    name: "Mayo",
+    name: 'Mayo',
     id: 5,
   },
   {
-    name: "Junio",
+    name: 'Junio',
     id: 6,
   },
   {
-    name: "Julio",
+    name: 'Julio',
     id: 7,
   },
   {
-    name: "Agosto",
+    name: 'Agosto',
     id: 8,
   },
   {
-    name: "Septiembre",
+    name: 'Septiembre',
     id: 9,
   },
   {
-    name: "Octubre",
+    name: 'Octubre',
     id: 10,
   },
   {
-    name: "Noviembre",
+    name: 'Noviembre',
     id: 11,
   },
   {
-    name: "Diciembre",
+    name: 'Diciembre',
     id: 12,
   },
 ];
 
 export const weekDays = [
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-  "Domingo",
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+  'Domingo',
 ];
 
 // The first released BOE year is 1960
@@ -65,5 +65,5 @@ export const years = Array.from(
   (_, i) => ({
     name: `${1960 + i}`,
     value: 1960 + i,
-  })
+  }),
 );

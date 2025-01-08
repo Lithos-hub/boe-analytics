@@ -3,43 +3,39 @@
     <div
       v-for="day in weekDays"
       :key="day"
-      class="text-center text-primary font-bold"
-    >
+      class="text-primary text-center font-bold">
       {{ day }}
     </div>
 
     <div
-      class="CalendarGrid__cell CalendarGrid__empty-cell"
       v-for="day in monthDays.firstDay - 1"
       :key="day"
-    ></div>
+      class="CalendarGrid__cell CalendarGrid__empty-cell" />
 
     <div
+      v-for="day in monthDays.days"
+      :key="day"
       class="CalendarGrid__cell CalendarGrid__day-cell"
       :class="{
         'CalendarGrid__day-cell--today':
           day === new Date().getDate() &&
           selectedMonth === new Date().getMonth() + 1 &&
           selectedYear === new Date().getFullYear(),
-      }"
-      v-for="day in monthDays.days"
-      :key="day"
-    >
-      <div class="absolute top-2 left-2">
+      }">
+      <div class="absolute left-2 top-2">
         {{ day }}
       </div>
     </div>
 
     <div
-      class="CalendarGrid__cell CalendarGrid__empty-cell"
       v-for="day in monthDays.lastDay"
       :key="day"
-    />
+      class="CalendarGrid__cell CalendarGrid__empty-cell" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { weekDays } from "@/components/Calendar/Calendar.const";
+import { weekDays } from '@/components/Calendar/Calendar.const';
 
 interface CalendarGridProps {
   monthDays: {
@@ -57,7 +53,7 @@ const { monthDays } = defineProps<CalendarGridProps>();
 <style scoped lang="scss">
 .CalendarGrid {
   &__cell {
-    @apply text-center text-primary font-bold rounded relative p-2 min-h-24;
+    @apply text-primary relative min-h-24 rounded p-2 text-center font-bold;
   }
 
   &__day-cell {

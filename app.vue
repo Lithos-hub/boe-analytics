@@ -1,8 +1,8 @@
 <template>
   <div class="text-white/80">
     <Navbar />
-    <Container class="overflow-y-auto max-h-[calc(100vh-56px)]">
-      <div class="max-w-[95vw] md:w-[80vw] mx-auto py-5">
+    <Container class="max-h-[calc(100vh-56px)] overflow-y-auto">
+      <div class="mx-auto max-w-[95vw] py-5 md:w-[80vw]">
         <NuxtPage />
       </div>
     </Container>

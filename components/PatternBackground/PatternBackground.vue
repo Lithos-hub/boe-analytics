@@ -1,10 +1,10 @@
 <template>
-  <div class="PatternBackground"></div>
+  <div class="PatternBackground" />
 </template>
 
 <style lang="scss" scoped>
 .PatternBackground {
-  @apply fixed top-0 left-0 h-screen w-screen -z-10 bg-[#292524] opacity-20;
+  @apply fixed left-0 top-0 -z-10 h-screen w-screen bg-[#292524] opacity-20;
 
   background-size: 12px 12px;
   background-image: repeating-linear-gradient(

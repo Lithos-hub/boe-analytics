@@ -1,16 +1,25 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2024-11-01",
+  modules: ['@nuxt/ui', '@nuxt/eslint'],
   devtools: { enabled: true },
-  modules: ["@nuxt/ui"],
   app: {
     head: {
-      link: [{ rel: "icon", type: "image/svg+xml", href: "/logo.svg" }],
-      title: "BOE Resumido",
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+      title: 'BOE Resumido',
     },
   },
   colorMode: {
-    preference: "dark",
+    preference: 'dark',
+  },
+  compatibilityDate: '2024-11-01',
+  eslint: {
+    config: {
+      stylistic: {
+        indent: 2,
+        quotes: 'single',
+        semi: true,
+      },
+    },
   },
   tailwindcss: {
     exposeConfig: true,
