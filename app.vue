@@ -2,7 +2,7 @@
   <div class="text-white/80">
     <Navbar />
     <Container class="overflow-y-auto max-h-[calc(100vh-56px)]">
-      <div class="max-w-[95vw] md:w-[80vw] mx-auto py-10">
+      <div class="max-w-[95vw] md:w-[80vw] mx-auto py-5">
         <NuxtPage />
       </div>
     </Container>
@@ -18,7 +18,6 @@ body {
 }
 
 /* Custom scrollbar styles */
-
 ::-webkit-scrollbar {
   width: 10px;
 }
