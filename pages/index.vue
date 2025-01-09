@@ -2,8 +2,17 @@
   <div class="Home__wrapper">
     <section class="flex w-full flex-wrap items-stretch justify-center gap-5">
       <article class="flex-1">
-        <Card class="flex h-full flex-col justify-between">
-          <CurrentBoe />
+        <Card class="relative flex h-full flex-col justify-between">
+          <Suspense>
+            <CurrentBoe />
+
+            <template #fallback>
+              <div
+                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <Loader />
+              </div>
+            </template>
+          </Suspense>
         </Card>
       </article>
       <article class="grow-0">

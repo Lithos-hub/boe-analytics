@@ -49,7 +49,7 @@
       </ul>
     </div>
   </div>
-  <div class="flex justify-end gap-5">
+  <div class="flex justify-end gap-5 pt-5">
     <UButton
       color="primary"
       variant="soft"
@@ -79,5 +79,3 @@ const formattedDate = `${currentYear}-${currentMonth.padStart(2, '0')}-${current
 
 const { data: boeText } = await useFetch(`/api/scrap/${formattedDate}`);
 </script>
-
-<style scoped></style>
