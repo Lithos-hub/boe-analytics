@@ -15,7 +15,7 @@
           </Suspense>
         </Card>
       </article>
-      <article class="grow-0">
+      <article class="h-full grow-0">
         <Card>
           <strong class="text-primary">Estadísticas</strong>
 
@@ -97,7 +97,7 @@ const options = {
 </script>
 
 <style scoped lang="scss">
-@use '@/assets/scss/main.scss' as *;
+@use '@/assets/scss/mixins.scss' as *;
 
 .Home {
   &__wrapper {

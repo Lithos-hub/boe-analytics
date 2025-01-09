@@ -1,5 +1,3 @@
-@use './mixins.scss' as *;
-
 h1 {
   @include text-heading-h1;
 }
