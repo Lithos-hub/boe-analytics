@@ -5,7 +5,7 @@
       <div class="flex items-center gap-5">
         <NuxtLink to="/" class="flex gap-2.5">
           <img src="/logo.svg" width="25" class="Navbar__logo-icon" />
-          <span class="Navbar__logo-text">BOE Resumido</span>
+          <span class="Navbar__logo-text">BOE Analytics</span>
         </NuxtLink>
       </div>
       <div class="flex gap-5">

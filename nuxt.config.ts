@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
-      title: 'BOE Resumido',
+      title: 'BOE Analytics',
     },
   },
   colorMode: {
