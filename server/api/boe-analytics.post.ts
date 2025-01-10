@@ -58,26 +58,32 @@ export default defineEventHandler(async (event) => {
         Identifica cada sección con un identificador único para que se pueda aplicar un estilo diferente en el CSS. Por ejemplo:
 
         <div id="summary" >
+        <h2>Principales puntos</h2>
             // contenido de la sección
         </div>
 
         <div id="keywords">
+            <h2>Palabras clave</h2>
             // contenido de la sección
         </div>
 
         <div id="areas">
+            <h2>Áreas afectadas</h2>
             // contenido de la sección
         </div>
 
         <div id="positive-points">
+            <h2>Puntos positivos</h2>
             // contenido de la sección
         </div>
 
         <div id="negative-points">
+            <h2>Puntos negativos</h2>
             // contenido de la sección
         </div>
 
         <div id="neutral-points">
+            <h2>Puntos neutros</h2>
             // contenido de la sección
         </div>
 

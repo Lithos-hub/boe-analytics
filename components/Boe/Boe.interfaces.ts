@@ -10,6 +10,6 @@ export interface ProcessedBoeText {
 }
 
 export interface BoeData {
-    text: string;
-    link: string;
-  }
+  text: string;
+  link: string;
+}

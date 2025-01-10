@@ -3,6 +3,7 @@
 
   <hr class="border-primary/10 my-5 border" />
 
+  <small>Aspectos positivos, negativos y neutros del boletín:</small>
   <div class="h-auto">
     <Pie :data :options />
   </div>
@@ -10,7 +11,14 @@
 
 <script setup lang="ts">
 import { Pie } from 'vue-chartjs';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  type ChartOptions,
+  type ChartData,
+} from 'chart.js';
 import type { ProcessedBoeStats } from './Boe.interfaces';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -21,7 +29,7 @@ interface BoeStatsProps {
 
 const props = defineProps<BoeStatsProps>();
 
-const data = {
+const data: ChartData<'pie'> = {
   labels: ['Positivo', 'Negativo', 'Neutral'],
   datasets: [
     {
@@ -34,12 +42,11 @@ const data = {
       backgroundColor: ['#22c55e', '#f43f5e', '#71717a'],
       borderWidth: 5,
       borderColor: ['#1D1C2B', '#1D1C2B', '#1D1C2B'],
-      color: 'white',
     },
   ],
 };
 
-const options = {
+const options: ChartOptions<'pie'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -50,28 +57,7 @@ const options = {
           size: 10,
         },
       },
-      scales: {
-        yAxes: [
-          {
-            ticks: {
-              fontColor: 'green',
-              fontSize: 18,
-              stepSize: 1,
-              beginAtZero: true,
-            },
-          },
-        ],
-        xAxes: [
-          {
-            ticks: {
-              fontColor: 'purple',
-              fontSize: 14,
-              stepSize: 1,
-              beginAtZero: true,
-            },
-          },
-        ],
-      },
+      position: 'left',
     },
   },
 };

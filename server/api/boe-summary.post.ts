@@ -81,13 +81,13 @@ export default defineEventHandler(async (event) => {
 
     return {
       briefSummary: briefSummary.choices[0].message.content ?? '',
-      stats
+      stats,
     };
   } catch (error) {
     console.error('DeepSeek API error:', error);
     return {
       briefSummary: '',
-      stats: { positive: 0, negative: 0, neutral: 0 }
+      stats: { positive: 0, negative: 0, neutral: 0 },
     };
   }
 });
