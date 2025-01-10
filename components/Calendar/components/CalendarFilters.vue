@@ -6,6 +6,7 @@
         v-model="search"
         color="primary"
         label="Buscar"
+        disabled
         placeholder="Introducte un término de búsqueda"
         icon="i-heroicons-magnifying-glass" />
     </div>

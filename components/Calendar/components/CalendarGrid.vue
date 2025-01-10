@@ -15,15 +15,33 @@
     <div
       v-for="day in monthDays.days"
       :key="day"
-      class="CalendarGrid__cell CalendarGrid__day-cell"
-      :class="{
-        'CalendarGrid__day-cell--today':
-          day === new Date().getDate() &&
-          selectedMonth === new Date().getMonth() + 1 &&
-          selectedYear === new Date().getFullYear(),
-      }">
+      :class="[
+        'CalendarGrid__cell',
+        'CalendarGrid__day-cell',
+        {
+          'CalendarGrid__day-cell--disabled': isFutureDate(
+            selectedYear,
+            selectedMonth,
+            day,
+          ),
+          'CalendarGrid__day-cell--today':
+            day === new Date().getDate() &&
+            selectedMonth === new Date().getMonth() + 1 &&
+            selectedYear === new Date().getFullYear(),
+        },
+      ]">
       <div class="absolute left-2 top-2">
         {{ day }}
+      </div>
+      <div class="absolute bottom-2 right-2 flex gap-2">
+        <!-- Go to /boe/:date page button -->
+        <UButton
+          color="primary"
+          variant="soft"
+          icon="i-heroicons-document-chart-bar"
+          class="border border-primary-500/50"
+          :disabled="isFutureDate(selectedYear, selectedMonth, day)"
+          :to="`/boe/${formatDate(selectedYear, selectedMonth, day)}`" />
       </div>
     </div>
 
@@ -58,6 +76,10 @@ const { monthDays } = defineProps<CalendarGridProps>();
 
   &__day-cell {
     @apply bg-primary-500/10;
+
+    &--disabled {
+      @apply bg-primary-800/10;
+    }
 
     &--today {
       @apply border-2 border-primary-500/50;
