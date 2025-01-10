@@ -8,6 +8,10 @@ export const isFutureDate = (year: number, month: number, day: number) => {
   return date > today;
 };
 
+export const isYearLessThan1960 = (year: number) => {
+  return year < 1960;
+};
+
 export const isToday = (year: number, month: number, day: number) => {
   const today = new Date();
   const date = new Date(year, month - 1, day);

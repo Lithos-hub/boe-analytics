@@ -6,7 +6,9 @@
     <CalendarGrid
       :month-days="monthDays"
       :selected-month="selectedMonth"
-      :selected-year="selectedYear" />
+      :selected-year="selectedYear"
+      @set-previous-month="setPreviousMonth"
+      @set-next-month="setNextMonth" />
   </div>
 </template>
 
@@ -40,4 +42,23 @@ const monthDays = computed(() => {
     lastDay,
   };
 });
+
+const setPreviousMonth = () => {
+  // Control if the month is the first month of the year
+  if (selectedMonth.value === 1) {
+    selectedMonth.value = 12;
+    selectedYear.value--;
+  } else {
+    selectedMonth.value--;
+  }
+};
+
+const setNextMonth = () => {
+  if (selectedMonth.value === 12) {
+    selectedMonth.value = 1;
+    selectedYear.value++;
+  } else {
+    selectedMonth.value++;
+  }
+};
 </script>
