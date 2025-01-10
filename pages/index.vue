@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import BoeManager from '~/components/Boe/Manager.vue';
+</script>
+
 <template>
   <div class="Home__wrapper">
     <Suspense>
@@ -29,7 +33,7 @@
 </template>
 
 <style scoped lang="scss">
-@use '@/assets/scss/mixins.scss' as *;
+@use '@/assets/scss/text.scss' as *;
 
 .Home {
   &__wrapper {

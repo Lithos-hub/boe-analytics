@@ -21,14 +21,17 @@
       color="primary"
       variant="soft"
       icon="i-heroicons-document-chart-bar"
-      class="border border-primary-500/50">
+      class="border border-primary-500/50"
+      :to="`/boe/${boeDateRaw}`">
       Consultar análisis
     </UButton>
     <UButton
       color="secondary"
       variant="soft"
       class="border border-secondary-500/50"
-      icon="i-heroicons-arrow-top-right-on-square">
+      icon="i-heroicons-arrow-top-right-on-square"
+      :to="boeLink"
+      target="_blank">
       Ver BOE original
     </UButton>
   </div>
@@ -37,7 +40,9 @@
 <script setup lang="ts">
 interface CurrentBoeProps {
   text: string;
+  boeDateRaw: string;
   boeDate: string;
+  boeLink: string;
 }
 
 defineProps<CurrentBoeProps>();

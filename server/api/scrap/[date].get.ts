@@ -89,6 +89,9 @@ export default defineEventHandler(async (event) => {
   // We close the browser
   await browser.close();
 
-  // We return the text
-  return text;
+  // We return the text and the link of the document
+  return {
+    text,
+    link: docUrl,
+  };
 });

@@ -19,7 +19,7 @@ const currentMessageIndex = ref(0);
 onMounted(() => {
   setInterval(() => {
     currentMessageIndex.value =
-      currentMessageIndex.value < props.statusMessages.length
+      currentMessageIndex.value < props.statusMessages.length - 1
         ? (currentMessageIndex.value + 1) % props.statusMessages.length
         : props.statusMessages.length - 1;
   }, 4000);

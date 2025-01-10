@@ -11,4 +11,14 @@ export default <Partial<Config>>{
       },
     },
   },
+  safelist: [
+    'py-2',
+    'flex',
+    'list-none',
+    'flex-col',
+    'gap-2',
+    'text-green-500',
+    'text-red-500',
+    'text-slate-500'
+  ],
 };
