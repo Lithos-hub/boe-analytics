@@ -24,7 +24,8 @@ DEEPSEEK_APIKEY=your-api-key
 
 - [x] Generation of a summary and brief statistics of the BOE for the current date in the "Home" section, or root route `/`.
 - [x] Generation of a detailed analysis of the BOE for a specific date in the route `/boe/:date`.
-- [ ] Query a BOE from the calendar.
+- [x] Query a BOE from the calendar.
+- [ ] Split BOE text when exceeding the maximum tokens (65536)
 - [ ] Global analytics of BOEs published in a year.
 - [ ] Database storage of analyzed BOEs and generated summaries.
 

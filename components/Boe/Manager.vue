@@ -50,6 +50,9 @@ const formattedDate = `${currentYear}-${currentMonth.padStart(2, '0')}-${current
 const { data: boeData } = await useFetch<BoeData>(
   `/api/scrap/${formattedDate}`,
 );
+
+// TODO: Split the boeData.text into chunks of 65536 tokens
+
 const { data: processedBoeData } = await useFetch<ProcessedBoeText>(
   `/api/boe-summary`,
   {
