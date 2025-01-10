@@ -34,9 +34,6 @@ export default defineEventHandler(async (event) => {
   // We navigate to the URL
   await page.goto(url);
 
-  // We get the content of the page
-  const content = await page.content();
-
   //   First we get the <li class="dispo"> element
   const disposicionesGenerales = await page.$('.dispo');
 

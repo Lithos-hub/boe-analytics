@@ -4,49 +4,16 @@
       <strong class="text-primary">Lo más reciente</strong>
       <span>
         BOE publicado el
-        <strong>{{ boeDate }}</strong>
+        <strong class="text-primary">{{ boeDate }}</strong>
       </span>
     </div>
 
     <hr class="border-primary/10 my-5 border" />
 
     <div class="flex flex-col gap-5">
-      <strong>Principales puntos:</strong>
-
-      <ul class="flex flex-col gap-1">
-        <li>
-          <strong>Lorem ipsum:</strong>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis a
-          doloribus corporis dolore eligendi.
-        </li>
-        <li>
-          <strong>Lorem ipsum:</strong>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo quibusdam
-          non hic nemo omnis laudantium modi aliquam, mollitia pariatur dolore
-          exercitationem sunt ut deserunt ea. Corporis odit totam amet alias.
-        </li>
-        <li>
-          <strong>Lorem ipsum:</strong>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Porro
-          doloribus optio perspiciatis sunt a eveniet.
-        </li>
-        <li>
-          <strong>Lorem ipsum:</strong>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis a
-          doloribus corporis dolore eligendi.
-        </li>
-        <li>
-          <strong>Lorem ipsum:</strong>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Quo quibusdam
-          non hic nemo omnis laudantium modi aliquam, mollitia pariatur dolore
-          exercitationem sunt ut deserunt ea. Corporis odit totam amet alias.
-        </li>
-        <li>
-          <strong>Lorem ipsum:</strong>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Porro
-          doloribus optio perspiciatis sunt a eveniet.
-        </li>
-      </ul>
+      <div v-if="text">
+        <div v-html="text" class="text-justify" />
+      </div>
     </div>
   </div>
   <div class="flex justify-end gap-5 pt-5">
@@ -68,14 +35,10 @@
 </template>
 
 <script setup lang="ts">
-const boeDate = 'lunes 6 de enero de 2025';
+interface CurrentBoeProps {
+  text: string;
+  boeDate: string;
+}
 
-const currentYear = String(new Date().getFullYear());
-const currentMonth = String(new Date().getMonth() + 1);
-const currentDay = String(new Date().getDate());
-
-// The formattedDate format must be 'YYYY-MM-DD'
-const formattedDate = `${currentYear}-${currentMonth.padStart(2, '0')}-${currentDay.padStart(2, '0')}`;
-
-const { data: boeText } = await useFetch(`/api/scrap/${formattedDate}`);
+defineProps<CurrentBoeProps>();
 </script>

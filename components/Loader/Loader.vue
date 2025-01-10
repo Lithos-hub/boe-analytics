@@ -1,8 +1,30 @@
 <template>
-  <div>
-    <span class="loader" />
+  <div class="flex flex-col items-center justify-center gap-5">
+    <div class="loader" />
+    <strong class="text-primary text-center">
+      {{ props.statusMessages[currentMessageIndex] }}
+    </strong>
   </div>
 </template>
+
+<script setup lang="ts">
+interface LoaderProps {
+  statusMessages: string[];
+}
+
+const props = defineProps<LoaderProps>();
+
+const currentMessageIndex = ref(0);
+
+onMounted(() => {
+  setInterval(() => {
+    currentMessageIndex.value =
+      currentMessageIndex.value < props.statusMessages.length
+        ? (currentMessageIndex.value + 1) % props.statusMessages.length
+        : props.statusMessages.length - 1;
+  }, 4000);
+});
+</script>
 
 <style lang="scss" scoped>
 .loader {
