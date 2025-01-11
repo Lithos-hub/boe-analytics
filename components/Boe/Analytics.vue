@@ -1,7 +1,8 @@
 <template>
   <div>
     <div class="BoeAnalytics BoeAnalytics__content">
-      <div class="flex justify-end">
+      <header class="flex items-center justify-end gap-5 pb-5">
+        <!-- Show original document -->
         <UButton
           color="secondary"
           variant="soft"
@@ -11,14 +12,35 @@
           target="_blank">
           Ver BOE original
         </UButton>
-      </div>
-      <div v-html="boeAnalysis" />
+        <!-- Show JSON || Show Analysis -->
+        <UButton
+          color="dark"
+          variant="soft"
+          class="border border-dark-500/50"
+          :icon="
+            showJSON
+              ? 'i-heroicons-document-chart-bar'
+              : 'i-heroicons-code-bracket'
+          "
+          @click="showJSON = !showJSON">
+          {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
+        </UButton>
+      </header>
+      <div v-if="!showJSON" v-html="boeAnalysisHTML" />
     </div>
+    <pre
+      v-if="showJSON"
+      class="rounded border-dark-500/50 bg-dark-900 p-5 text-sm text-green-500"
+      >{{ boeAnalysisJSON }}</pre
+    >
   </div>
 </template>
 
 <script setup lang="ts">
-import type { BoeData } from './Boe.interfaces';
+import type {
+  BoeAnalyticsResponse,
+  BoeScrapingResponse,
+} from './Boe.interfaces';
 
 interface BoeAnalyticsProps {
   date: string;
@@ -26,13 +48,46 @@ interface BoeAnalyticsProps {
 
 const props = defineProps<BoeAnalyticsProps>();
 
-const { data: boeData } = await useFetch<BoeData>(`/api/scrap/${props.date}`);
-const { data: boeAnalysis } = await useFetch<string>(`/api/boe-analytics`, {
-  method: 'POST',
-  body: {
-    text: boeData.value?.text ?? '',
-  },
-});
+const { data: boeData } = await useFetch<BoeScrapingResponse>(
+  `/api/scrap/${props.date}`,
+);
+
+const getTextChunks = (text: string) => {
+  const splittedTextByWords = text.split(/\s+/g);
+  const chunks = [];
+  for (let i = 0; i < splittedTextByWords.length; i += 65536) {
+    chunks.push(splittedTextByWords.slice(i, i + 65536).join(' '));
+  }
+  return chunks;
+};
+
+const textChunks = getTextChunks(boeData.value?.text ?? '');
+
+const boeAnalysisHTML = ref<string>('');
+const boeAnalysisJSON = ref<string>('');
+const showJSON = ref<boolean>(false);
+
+const getBoeAnalysis = async () => {
+  try {
+    for (const chunk of textChunks) {
+      const { data: boeAnalysisChunk } = await useFetch<BoeAnalyticsResponse>(
+        `/api/boe-analytics`,
+        {
+          method: 'POST',
+          body: {
+            text: chunk,
+          },
+        },
+      );
+      boeAnalysisHTML.value += boeAnalysisChunk.value?.analysisHTML ?? '';
+      boeAnalysisJSON.value = boeAnalysisChunk.value?.analysisJSON ?? '';
+    }
+  } catch (error) {
+    console.error('Error getting BOE analysis:', error);
+  }
+};
+
+await getBoeAnalysis();
 </script>
 
 <style scoped lang="scss">
@@ -131,11 +186,9 @@ const { data: boeAnalysis } = await useFetch<string>(`/api/boe-analytics`, {
   }
 
   .BoeAnalytics__content--list {
-    @apply flex list-none flex-col gap-2;
+    @apply list-none;
 
     &-item {
-      @apply flex gap-2;
-
       &--positive {
         @apply text-green-200;
       }

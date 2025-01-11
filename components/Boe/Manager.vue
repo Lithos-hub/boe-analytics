@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import type { BoeData, ProcessedBoeText } from './Boe.interfaces';
+import type { BoeScrapingResponse, BoeSummaryResponse } from './Boe.interfaces';
 
 // boeDate is the date in the format 'lunes 6 de enero de 2025'
 const boeDate = new Date().toLocaleDateString('es-ES', {
@@ -47,13 +47,20 @@ const currentDay = String(new Date().getDate());
 // The formattedDate format must be 'YYYY-MM-DD'
 const formattedDate = `${currentYear}-${currentMonth.padStart(2, '0')}-${currentDay.padStart(2, '0')}`;
 
-const { data: boeData } = await useFetch<BoeData>(
+const { data: boeData } = await useFetch<BoeScrapingResponse>(
   `/api/scrap/${formattedDate}`,
 );
 
 // TODO: Split the boeData.text into chunks of 65536 tokens
 
-const { data: processedBoeData } = await useFetch<ProcessedBoeText>(
+const getTextChunks = (text: string) => {
+  const chunks = text.split(/\n\n/g);
+  return chunks.map((chunk) => chunk.slice(0, 65536));
+};
+
+const textChunks = getTextChunks(boeData.value?.text ?? '');
+
+const { data: processedBoeData } = await useFetch<BoeSummaryResponse>(
   `/api/boe-summary`,
   {
     method: 'POST',
