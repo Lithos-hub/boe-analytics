@@ -4,12 +4,17 @@ export interface ProcessedBoeStats {
   neutral: number;
 }
 
-export interface ProcessedBoeText {
+export interface BoeSummaryResponse {
   briefSummary: string;
   stats: ProcessedBoeStats;
 }
 
-export interface BoeData {
+export interface BoeScrapingResponse {
   text: string;
   link: string;
+}
+
+export interface BoeAnalyticsResponse {
+  analysisHTML: string;
+  analysisJSON: string;
 }

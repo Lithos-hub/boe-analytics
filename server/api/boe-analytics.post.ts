@@ -19,7 +19,7 @@ const openai = new OpenAI({
 export default defineEventHandler(async (event) => {
   const { text } = await readBody(event);
 
-  const response = await openai.chat.completions.create({
+  const boeAnalyticsHTML = await openai.chat.completions.create({
     messages: [
       {
         role: 'system',
@@ -69,7 +69,12 @@ export default defineEventHandler(async (event) => {
 
         <div id="areas">
             <h2>Áreas afectadas</h2>
-            // contenido de la sección
+            <ul>
+              <li>
+                <strong class="BoeAnalytics__area-item--title">Nombre del area: </strong>
+                Descripción del area.
+              </li>
+            </ul>
         </div>
 
         <div id="positive-points">
@@ -94,5 +99,43 @@ export default defineEventHandler(async (event) => {
     model: 'deepseek-chat',
   });
 
-  return response.choices[0].message.content;
+  /**  This will be a JSON containing the analysis of the text. Example:
+  {
+    mainPoints: ["point1", "point2", "point3"],
+    keywords: ["keyword1", "keyword2", "keyword3"],
+    areas: ["area1", "area2", "area3"],
+    positivePoints: ["point1", "point2", "point3"],
+    negativePoints: ["point1", "point2", "point3"],
+    neutralPoints: ["point1", "point2", "point3"],
+  }
+  */
+  const boeAnalyticsJSON = await openai.chat.completions.create({
+    messages: [
+      {
+        role: 'system',
+        content: `Se te va a proporcionar un texto en formato HTML. Debes extraer el contenido del texto para generar un JSON con las siguientes propiedades:
+        - mainPoints: Array de strings con los puntos principales del texto.
+        - keywords: Array de strings con las palabras clave del texto.
+        - areas: Array de strings con las áreas afectadas por las medidas implementadas en el boletín.
+        - positivePoints: Array de strings con los puntos positivos del texto.
+        - negativePoints: Array de strings con los puntos negativos del texto.
+        - neutralPoints: Array de strings con los puntos neutros del texto.
+        
+        El resultado final debe ser algo similar a lo siguiente: 
+        
+        { "mainPoints": ["point1", "point2", "point3"], "keywords": ["keyword1", "keyword2", "keyword3"], "areas": ["area1", "area2", "area3"], "positivePoints": ["point1", "point2", "point3"], "negativePoints": ["point1", "point2", "point3"], "neutralPoints": ["point1", "point2", "point3"] }
+         
+        No incluyas comillas ni comentarios en el JSON, devuelve la cadena de texto empezando y acabando por las llaves.
+        
+        El texto es el siguiente:
+        ${boeAnalyticsHTML.choices[0].message.content}`,
+      },
+    ],
+    model: 'deepseek-chat',
+  });
+
+  return {
+    analysisHTML: boeAnalyticsHTML.choices[0].message.content,
+    analysisJSON: boeAnalyticsJSON.choices[0].message.content,
+  };
 });
