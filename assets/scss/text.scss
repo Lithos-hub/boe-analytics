@@ -23,11 +23,3 @@ h5 {
 h6 {
   @include text-heading-h6;
 }
-
-p {
-  @include text-paragraph;
-}
-
-a {
-  @include text-link;
-}
