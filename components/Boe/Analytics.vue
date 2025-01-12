@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div class="BoeAnalytics BoeAnalytics__content">
+  <div class="BoeAnalytics">
+    <div class="BoeAnalytics__content">
       <header class="flex items-center justify-end gap-5 pb-5">
         <!-- Show original document -->
         <UButton
@@ -16,6 +16,7 @@
         <UButton
           color="dark"
           variant="soft"
+          disabled
           class="border border-dark-500/50"
           :icon="
             showJSON
@@ -26,70 +27,159 @@
           {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
         </UButton>
       </header>
-      <div v-if="!showJSON" v-html="boeAnalysisHTML" />
+      <div v-if="!showJSON">
+        <!-- Main Points Section -->
+        <div id="summary">
+          <h2>Principales puntos</h2>
+          <div
+            v-if="mainPoints"
+            class="BoeAnalytics__section"
+            v-html="mainPoints" />
+        </div>
+
+        <!-- Keywords Section -->
+        <div id="keywords">
+          <h2>Palabras clave</h2>
+          <div
+            v-if="keywords"
+            class="BoeAnalytics__section"
+            v-html="keywords" />
+        </div>
+
+        <!-- Areas Section -->
+        <div id="areas">
+          <h2>Áreas afectadas</h2>
+          <div v-if="areas" class="BoeAnalytics__section" v-html="areas" />
+        </div>
+
+        <!-- Analysis Points Section -->
+        <div id="analysis-points">
+          <div
+            v-if="analysisPoints"
+            class="BoeAnalytics__section"
+            v-html="analysisPoints" />
+        </div>
+
+        <div v-if="error" class="BoeAnalytics__error">
+          {{ error }}
+        </div>
+      </div>
+      <pre
+        v-else
+        class="rounded border-dark-500/50 bg-dark-900 p-5 text-sm text-green-500"
+        >{{ boeAnalysisJSON }}</pre
+      >
     </div>
-    <pre
-      v-if="showJSON"
-      class="rounded border-dark-500/50 bg-dark-900 p-5 text-sm text-green-500"
-      >{{ boeAnalysisJSON }}</pre
-    >
   </div>
 </template>
 
 <script setup lang="ts">
-import type {
-  BoeAnalyticsResponse,
-  BoeScrapingResponse,
-} from './Boe.interfaces';
+import type { BoeScrapingResponse } from './Boe.interfaces';
 
-interface BoeAnalyticsProps {
+const props = defineProps<{
   date: string;
-}
+}>();
 
-const props = defineProps<BoeAnalyticsProps>();
+const error = ref<string | null>(null);
+const mainPoints = ref<string | null>(null);
+const keywords = ref<string | null>(null);
+const areas = ref<string | null>(null);
+const analysisPoints = ref<string | null>(null);
+const showJSON = ref<boolean>(false);
+const boeAnalysisJSON = ref<string>('');
 
-const { data: boeData } = await useFetch<BoeScrapingResponse>(
+const { data: boeData } = useFetch<BoeScrapingResponse>(
   `/api/scrap/${props.date}`,
 );
 
-const getTextChunks = (text: string) => {
-  const splittedTextByWords = text.split(/\s+/g);
-  const chunks = [];
-  for (let i = 0; i < splittedTextByWords.length; i += 65536) {
-    chunks.push(splittedTextByWords.slice(i, i + 65536).join(' '));
+const getTextChunks = (text: string): string[] => {
+  const maxTokens = 65536;
+  const tokenPerChar = 0.3;
+  const maxCharsPerChunk = Math.floor(maxTokens / tokenPerChar);
+
+  const chunks: string[] = [];
+  let currentIndex = 0;
+
+  while (currentIndex < text.length) {
+    // Calcular el final del chunk
+    let endIndex = currentIndex + maxCharsPerChunk;
+
+    // Si no hemos llegado al final del texto
+    if (endIndex < text.length) {
+      // Buscar el último punto o salto de línea antes del límite
+      const lastPeriod = text.lastIndexOf('.', endIndex);
+      const lastNewline = text.lastIndexOf('\n', endIndex);
+      endIndex = Math.max(
+        lastPeriod !== -1 ? lastPeriod + 1 : 0,
+        lastNewline !== -1 ? lastNewline + 1 : 0,
+      );
+
+      // Si no encontramos un punto o salto de línea, cortar en el límite
+      if (endIndex <= currentIndex) {
+        endIndex = currentIndex + maxCharsPerChunk;
+      }
+    }
+
+    chunks.push(text.slice(currentIndex, endIndex));
+    currentIndex = endIndex;
   }
+
   return chunks;
 };
 
-const textChunks = getTextChunks(boeData.value?.text ?? '');
+const fetchAnalytics = async () => {
+  error.value = null;
+  const text = boeData.value?.text || '';
+  const chunks = getTextChunks(text);
 
-const boeAnalysisHTML = ref<string>('');
-const boeAnalysisJSON = ref<string>('');
-const showJSON = ref<boolean>(false);
-
-const getBoeAnalysis = async () => {
   try {
-    for (const chunk of textChunks) {
-      const { data: boeAnalysisChunk } = await useFetch<BoeAnalyticsResponse>(
-        `/api/boe-analytics`,
-        {
-          method: 'POST',
-          body: {
-            text: chunk,
-          },
-        },
-      );
-      boeAnalysisHTML.value += boeAnalysisChunk.value?.analysisHTML ?? '';
-      boeAnalysisJSON.value = boeAnalysisChunk.value?.analysisJSON ?? '';
+    let mainPointsHtml = '';
+    let keywordsHtml = '';
+    let areasHtml = '';
+    let analysisPointsHtml = '';
+
+    // Procesar cada chunk secuencialmente
+    for (const chunk of chunks) {
+      const [chunkMainPoints, chunkKeywords, chunkAreas, chunkAnalysisPoints] =
+        await Promise.all([
+          $fetch('/api/boe/main-points', {
+            method: 'POST',
+            body: { text: chunk },
+          }),
+          $fetch('/api/boe/keywords', {
+            method: 'POST',
+            body: { text: chunk },
+          }),
+          $fetch('/api/boe/areas', {
+            method: 'POST',
+            body: { text: chunk },
+          }),
+          $fetch('/api/boe/analysis-points', {
+            method: 'POST',
+            body: { text: chunk },
+          }),
+        ]);
+
+      // Acumular los resultados HTML
+      mainPointsHtml += chunkMainPoints.mainPointsHTML || '';
+      keywordsHtml += chunkKeywords.keywordsHTML || '';
+      areasHtml += chunkAreas.areasHTML || '';
+      analysisPointsHtml += chunkAnalysisPoints.analysisPointsHTML || '';
     }
-  } catch (error) {
-    console.error('Error getting BOE analysis:', error);
+
+    // Actualizar los refs con los resultados completos
+    mainPoints.value = mainPointsHtml;
+    keywords.value = keywordsHtml;
+    areas.value = areasHtml;
+    analysisPoints.value = analysisPointsHtml;
+  } catch (e) {
+    error.value = 'Error al cargar el análisis. Por favor, inténtelo de nuevo.';
+    console.error('Error fetching analytics:', e);
   }
 };
 
-await getBoeAnalysis();
+await fetchAnalytics();
 </script>
-
 <style scoped lang="scss">
 @use '@/assets/scss/text.scss' as *;
 

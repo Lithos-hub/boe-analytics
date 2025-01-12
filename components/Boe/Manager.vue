@@ -1,17 +1,17 @@
 <template>
   <div class="BoeManager__wrapper">
     <section class="flex w-full flex-wrap items-stretch justify-center gap-5">
-      <article class="flex-1">
+      <article class="w-full flex-1">
         <Card class="relative flex h-full flex-col justify-between">
           <BoeSummary
             :text="processedBoeData?.briefSummary ?? ''"
             :boe-date-raw="boeDateRaw"
             :boe-date="boeDate"
-            :boe-link="boeData?.link ?? ''" />
+            :boe-link="scrappedBoeData?.link ?? ''" />
         </Card>
       </article>
-      <article class="h-full grow-0">
-        <Card>
+      <article class="flex grow-0 flex-col">
+        <Card class="h-full">
           <BoeStats
             :stats="
               processedBoeData?.stats ?? {
@@ -28,6 +28,9 @@
 
 <script setup lang="ts">
 import type { BoeScrapingResponse, BoeSummaryResponse } from './Boe.interfaces';
+
+const scrappedBoeData = ref<BoeScrapingResponse | null>(null);
+const processedBoeData = ref<BoeSummaryResponse | null>(null);
 
 // boeDate is the date in the format 'lunes 6 de enero de 2025'
 const boeDate = new Date().toLocaleDateString('es-ES', {
@@ -47,28 +50,41 @@ const currentDay = String(new Date().getDate());
 // The formattedDate format must be 'YYYY-MM-DD'
 const formattedDate = `${currentYear}-${currentMonth.padStart(2, '0')}-${currentDay.padStart(2, '0')}`;
 
-const { data: boeData } = await useFetch<BoeScrapingResponse>(
-  `/api/scrap/${formattedDate}`,
-);
+const getBoeData = async () => {
+  const { data: boeData, error } = await useFetch<BoeScrapingResponse>(
+    `/api/scrap/${formattedDate}`,
+  );
 
-// TODO: Split the boeData.text into chunks of 65536 tokens
+  scrappedBoeData.value = boeData.value;
 
-const getTextChunks = (text: string) => {
-  const chunks = text.split(/\n\n/g);
-  return chunks.map((chunk) => chunk.slice(0, 65536));
+  if (error.value?.statusCode === 404) {
+    processedBoeData.value = {
+      briefSummary:
+        'El BOE de hoy no está disponible. Inténtalo más tarde o consulta el BOE de otra fecha usando el calendario.',
+      stats: {
+        positive: 0,
+        negative: 0,
+        neutral: 0,
+      },
+    };
+  } else {
+    const { data: processedBoeData } = await useFetch<BoeSummaryResponse>(
+      `/api/boe/summary`,
+      {
+        method: 'POST',
+        body: {
+          text: boeData.value?.text ?? '',
+        },
+      },
+    );
+
+    processedBoeData.value = processedBoeData.value;
+  }
 };
 
-const textChunks = getTextChunks(boeData.value?.text ?? '');
-
-const { data: processedBoeData } = await useFetch<BoeSummaryResponse>(
-  `/api/boe-summary`,
-  {
-    method: 'POST',
-    body: {
-      text: boeData.value?.text ?? '',
-    },
-  },
-);
+onMounted(() => {
+  getBoeData();
+});
 </script>
 
 <style scoped lang="scss">

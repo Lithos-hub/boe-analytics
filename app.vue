@@ -2,7 +2,7 @@
   <div class="text-white/80">
     <Navbar />
     <Container class="max-h-[calc(100vh-56px)] overflow-y-auto">
-      <div class="mx-auto max-w-[95vw] py-5 md:w-[80vw]">
+      <div class="mx-auto max-w-[95vw] py-5 2xl:w-[80vw]">
         <NuxtPage />
       </div>
     </Container>

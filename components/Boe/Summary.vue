@@ -2,10 +2,7 @@
   <div>
     <div class="flex items-center justify-between">
       <strong class="text-primary">Lo más reciente</strong>
-      <span>
-        BOE publicado el
-        <strong class="text-primary">{{ boeDate }}</strong>
-      </span>
+      <strong class="text-secondary">{{ boeDate }}</strong>
     </div>
 
     <hr class="border-primary/10 my-5 border" />
