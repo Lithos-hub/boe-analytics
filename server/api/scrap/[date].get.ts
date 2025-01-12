@@ -73,6 +73,16 @@ export default defineEventHandler(async (event) => {
   // We navigate to the docUrl
   await page.goto(docUrl);
 
+  // If page text contains Error 404 message, we throw an error
+  const error404 = await page.getByText('Error 404');
+
+  if (error404) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Error 404: Page not found',
+    });
+  }
+
   //   In that page, we need to get the id="DOdocText" element
   const docTextElement = await page.$('#DOdocText');
 

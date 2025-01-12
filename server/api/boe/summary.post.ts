@@ -40,6 +40,8 @@ export default defineEventHandler(async (event) => {
             <p>Resume aquí el texto del boletín en uno o más párrafos.</p>  
             <p>...</p>
           </div>
+
+          No incluyas comillas ni comentarios, simplemente devuelve el texto en HTML empezando y acabando con etiquetas <div></div>.
           
           El texto es el siguiente:
           ${text}`,
