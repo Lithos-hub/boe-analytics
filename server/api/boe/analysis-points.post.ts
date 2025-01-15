@@ -1,4 +1,4 @@
-import { getAnalysisPoints } from '../../services/boe/getAnalysisPoints';
+import { getAnalysisPoints } from '@/server/services/boe/getAnalysisPoints';
 
 export default defineEventHandler(async (event) => {
   try {

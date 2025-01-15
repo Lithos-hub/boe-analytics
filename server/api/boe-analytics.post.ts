@@ -1,7 +1,7 @@
-import { getMainPoints } from '../services/boe/getMainPoints';
-import { getKeywords } from '../services/boe/getKeywords';
-import { getAreas } from '../services/boe/getAreas';
-import { getAnalysisPoints } from '../services/boe/getAnalysisPoints';
+import { getMainPoints } from '@/server/services/boe/getMainPoints';
+import { getKeywords } from '@/server/services/boe/getKeywords';
+import { getAreas } from '@/server/services/boe/getAreas';
+import { getAnalysisPoints } from '@/server/services/boe/getAnalysisPoints';
 
 export default defineEventHandler(async (event) => {
   try {

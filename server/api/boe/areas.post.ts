@@ -1,4 +1,4 @@
-import { getAreas } from '../../services/boe/getAreas';
+import { getAreas } from '@/server/services/boe/getAreas';
 
 export default defineEventHandler(async (event) => {
   try {

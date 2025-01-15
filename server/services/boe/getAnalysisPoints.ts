@@ -1,4 +1,4 @@
-import { openai } from '../openai';
+import { openai } from '@/server/services/openai';
 
 export const getAnalysisPoints = async (text: string) => {
   const response = await openai.chat.completions.create({

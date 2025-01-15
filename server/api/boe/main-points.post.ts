@@ -1,4 +1,4 @@
-import { getMainPoints } from '../../services/boe/getMainPoints';
+import { getMainPoints } from '@/server/services/boe/getMainPoints';
 
 export default defineEventHandler(async (event) => {
   try {

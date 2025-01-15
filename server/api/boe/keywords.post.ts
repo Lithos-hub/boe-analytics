@@ -1,4 +1,4 @@
-import { getKeywords } from '../../services/boe/getKeywords';
+import { getKeywords } from '@/server/services/boe/getKeywords';
 
 export default defineEventHandler(async (event) => {
   try {
