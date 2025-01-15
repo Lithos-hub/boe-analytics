@@ -6,7 +6,7 @@ export interface ProcessedBoeStats {
 
 export interface BoeSummaryResponse {
   briefSummary: string;
-  stats: ProcessedBoeStats;
+  stats?: ProcessedBoeStats;
 }
 
 export interface BoeScrapingResponse {
