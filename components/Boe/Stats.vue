@@ -3,9 +3,16 @@
 
   <hr class="border-primary/10 my-5 border" />
 
-  <small>Aspectos positivos, negativos y neutros del boletín:</small>
-  <div class="h-auto">
-    <Pie :data :options />
+  <div v-if="stats">
+    <small>Aspectos positivos, negativos y neutros del boletín:</small>
+    <div class="h-auto">
+      <Pie :data :options />
+    </div>
+  </div>
+  <div v-else>
+    <p class="text-red-500">
+      No se han podido obtener las estadísticas del boletín.
+    </p>
   </div>
 </template>
 
@@ -24,7 +31,7 @@ import type { ProcessedBoeStats } from './Boe.interfaces';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface BoeStatsProps {
-  stats: ProcessedBoeStats;
+  stats?: ProcessedBoeStats;
 }
 
 const props = defineProps<BoeStatsProps>();
@@ -35,9 +42,9 @@ const data: ChartData<'pie'> = {
     {
       label: 'Cantidad',
       data: [
-        props.stats.positive ?? 0,
-        props.stats.negative ?? 0,
-        props.stats.neutral ?? 0,
+        props.stats?.positive ?? 0,
+        props.stats?.negative ?? 0,
+        props.stats?.neutral ?? 0,
       ],
       backgroundColor: ['#22c55e', '#f43f5e', '#71717a'],
       borderWidth: 5,
