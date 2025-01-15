@@ -28,7 +28,7 @@
                   'Extrayendo palabras clave...',
                   'Identificando áreas afectadas...',
                   'Evaluando puntos positivos, negativos y neutros...',
-                  'Generando resumen final...',
+                  'Generando resumen final, esto puede tardar unos minutos...',
                 ]" />
             </div>
           </template>
