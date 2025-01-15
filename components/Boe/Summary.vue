@@ -11,6 +11,12 @@
       <div v-if="text">
         <div v-html="text" class="text-justify" />
       </div>
+      <div v-else>
+        <p class="text-red-500">
+          El BOE de hoy no está disponible. Inténtalo más tarde o consulta el
+          BOE de otra fecha usando el calendario.
+        </p>
+      </div>
     </div>
   </div>
   <div class="flex justify-end gap-5 pt-5">
@@ -19,6 +25,7 @@
       variant="soft"
       icon="i-heroicons-document-chart-bar"
       class="border border-primary-500/50"
+      :disabled="!text"
       :to="`/boe/${boeDateRaw}`">
       Consultar análisis
     </UButton>
@@ -27,6 +34,7 @@
       variant="soft"
       class="border border-secondary-500/50"
       icon="i-heroicons-arrow-top-right-on-square"
+      :disabled="!boeLink"
       :to="boeLink"
       target="_blank">
       Ver BOE original
