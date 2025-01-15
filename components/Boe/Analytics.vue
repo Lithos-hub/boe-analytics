@@ -1,75 +1,96 @@
 <template>
   <div class="BoeAnalytics">
     <div class="BoeAnalytics__content">
-      <header class="flex items-center justify-end gap-5 pb-5">
-        <!-- Analyze again -->
-        <UButton
-          color="primary"
-          variant="soft"
-          class="border border-primary-500/50"
-          icon="i-heroicons-arrow-path"
-          @click="fetchAnalytics">
-          Analizar de nuevo
-        </UButton>
-        <!-- Show original document -->
-        <UButton
-          color="secondary"
-          variant="soft"
-          class="border border-secondary-500/50"
-          icon="i-heroicons-arrow-top-right-on-square"
-          :to="boeData?.link"
-          target="_blank">
-          Ver BOE original
-        </UButton>
-        <!-- Show JSON || Show Analysis -->
-        <UButton
-          color="dark"
-          variant="soft"
-          disabled
-          class="border border-dark-500/50"
-          :icon="
-            showJSON
-              ? 'i-heroicons-document-chart-bar'
-              : 'i-heroicons-code-bracket'
-          "
-          @click="showJSON = !showJSON">
-          {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
-        </UButton>
-      </header>
-      <div v-if="!showJSON">
-        <!-- Main Points Section -->
-        <div class="BoeAnalytics__section--summary">
-          <h2>Principales puntos</h2>
-          <div v-if="mainPoints" v-html="mainPoints" />
-        </div>
-
-        <!-- Keywords Section -->
-        <div class="BoeAnalytics__section--keywords">
-          <h2>Palabras clave</h2>
-          <div v-if="keywords" v-html="keywords" />
-        </div>
-
-        <!-- Areas Section -->
-        <div class="BoeAnalytics__section--areas">
-          <h2>Áreas afectadas</h2>
-          <div v-if="areas" v-html="areas" />
-        </div>
-
-        <!-- Analysis Points Section -->
-        <div class="BoeAnalytics__section BoeAnalytics__section--points">
-          <h2>Aspectos a destacar</h2>
-          <div v-if="analysisPoints" v-html="analysisPoints" />
-        </div>
-
-        <div v-if="error" class="BoeAnalytics__error">
-          {{ error }}
-        </div>
+      <div
+        v-if="error"
+        class="BoeAnalytics__error rounded border border-red-500 bg-red-500/10 p-5 text-red-200">
+        {{ error }}
       </div>
-      <pre
-        v-else
-        class="rounded border-dark-500/50 bg-dark-900 p-5 text-sm text-green-500"
-        >{{ boeAnalysisJSON }}</pre
-      >
+
+      <div
+        v-if="warningMessage && !error && isLoading"
+        class="BoeAnalytics__warning rounded border border-yellow-500 bg-yellow-500/10 p-5 text-yellow-200">
+        {{ warningMessage }}
+        <small class="flex gap-5">
+          <UIcon name="i-heroicons-exclamation-triangle" />
+          El documento contiene aproximadamente {{ wordsCount }} palabras.
+        </small>
+      </div>
+
+      <template v-else-if="!error && !isLoading">
+        <header class="flex items-center justify-end gap-5 pb-5">
+          <!-- Analyze again -->
+          <UButton
+            color="green"
+            variant="soft"
+            class="border border-green-500/50"
+            icon="i-heroicons-arrow-down-tray"
+            @click="downloadPDF">
+            Descargar PDF
+          </UButton>
+          <!-- Analyze again -->
+          <UButton
+            color="primary"
+            variant="soft"
+            class="border border-primary-500/50"
+            icon="i-heroicons-arrow-path"
+            @click="fetchAnalytics">
+            Analizar de nuevo
+          </UButton>
+          <!-- Show original document -->
+          <UButton
+            color="secondary"
+            variant="soft"
+            class="border border-secondary-500/50"
+            icon="i-heroicons-arrow-top-right-on-square"
+            :to="boeData?.link"
+            target="_blank">
+            Ver BOE original
+          </UButton>
+          <!-- Show JSON || Show Analysis -->
+          <UButton
+            color="dark"
+            variant="soft"
+            disabled
+            class="border border-dark-500/50"
+            :icon="
+              showJSON
+                ? 'i-heroicons-document-chart-bar'
+                : 'i-heroicons-code-bracket'
+            "
+            @click="showJSON = !showJSON">
+            {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
+          </UButton>
+        </header>
+
+        <div v-if="!showJSON">
+          <!-- Main Points Section -->
+          <div class="BoeAnalytics__section--summary">
+            <h2>Principales puntos</h2>
+            <div v-if="mainPoints" v-html="mainPoints" />
+          </div>
+
+          <!-- Keywords Section -->
+          <div class="BoeAnalytics__section--keywords">
+            <h2>Palabras clave</h2>
+            <div v-if="keywords" v-html="keywords" />
+          </div>
+
+          <!-- Areas Section -->
+          <div class="BoeAnalytics__section--areas">
+            <h2>Áreas afectadas</h2>
+            <div v-if="areas" v-html="areas" />
+          </div>
+
+          <!-- Analysis Points Section -->
+          <div class="BoeAnalytics__section BoeAnalytics__section--points">
+            <h2>Aspectos a destacar</h2>
+            <div v-if="analysisPoints" v-html="analysisPoints" />
+          </div>
+        </div>
+
+        <pre v-else>{{ boeAnalysisJSON }}</pre>
+      </template>
     </div>
   </div>
 </template>
@@ -95,7 +116,24 @@ export default defineComponent({
     const boeAnalysisJSON = ref<string>('');
     const boeData = ref<BoeScrapingResponse | null>(null);
 
+    const warningMessage = ref<string | null>(null);
+    const wordsCount = ref<number>(0);
+    const isLoading = ref<boolean>(false);
+
+    const downloadPDF = () => {
+      const data: PDFData[] = [
+        { heading: 'Puntos principales', text: mainPoints.value || '' },
+        { heading: 'Palabras clave', text: keywords.value || '' },
+        { heading: 'Áreas afectadas', text: areas.value || '' },
+        { heading: 'Aspectos a destacar', text: analysisPoints.value || '' },
+      ];
+
+      generatePDF(data, 'boe-analysis');
+    };
+
     const getTextChunks = (text: string): string[] => {
+      wordsCount.value = text.split(' ').length;
+
       const maxTokens = 65536;
       const tokenPerChar = 0.3;
       const maxCharsPerChunk = Math.floor(maxTokens / tokenPerChar);
@@ -123,11 +161,17 @@ export default defineComponent({
         currentIndex = endIndex;
       }
 
+      if (chunks.length > 1) {
+        warningMessage.value =
+          'El documento a analizar es muy grande, puede que esta operación tarde unos minutos.';
+      }
+
       return chunks;
     };
 
     const fetchAnalytics = async () => {
       error.value = null;
+      isLoading.value = true;
       const text = boeData.value?.text || '';
       const chunks = getTextChunks(text);
 
@@ -176,15 +220,43 @@ export default defineComponent({
         error.value =
           'Error al cargar el análisis. Por favor, inténtelo de nuevo.';
         console.error('Error fetching analytics:', e);
+      } finally {
+        isLoading.value = false;
       }
     };
 
     // Fetch initial data
-    const { data } = await useFetch<BoeScrapingResponse>(
+    const { data, error: fetchError } = await useFetch<BoeScrapingResponse>(
       `/api/scrap/${props.date}`,
     );
+
+    // Aquí está el problema - no estamos manejando el error
     boeData.value = data.value;
 
+    // Solución: Manejar el error explícitamente
+    if (fetchError.value) {
+      error.value =
+        fetchError.value.statusCode === 404
+          ? 'El BOE de esta fecha no existe o no se encuentra disponible'
+          : 'Error al cargar el BOE. Por favor, inténtelo de nuevo.';
+      return {
+        error,
+        downloadPDF,
+        warningMessage,
+        wordsCount,
+        isLoading,
+        mainPoints: ref(null),
+        keywords: ref(null),
+        areas: ref(null),
+        analysisPoints: ref(null),
+        showJSON: ref(false),
+        boeAnalysisJSON: ref(''),
+        boeData: ref(null),
+        fetchAnalytics: () => {}, // función vacía ya que hay error
+      };
+    }
+
+    // Solo ejecutar fetchAnalytics si no hay error
     await fetchAnalytics();
 
     return {
