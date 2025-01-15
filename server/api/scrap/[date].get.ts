@@ -9,7 +9,7 @@ import { chromium } from 'playwright';
 export default defineEventHandler(async (event) => {
   //   First we get the date given as parameter.
   // If it is not present, we throw an error
-  // If the format is not YYYY/MM/DD, we throw an error
+  // If the format is not YYYY/MM/DD (when scraping from the website), we throw an error
   const date = getRouterParam(event, 'date');
 
   if (!date) {
@@ -18,10 +18,11 @@ export default defineEventHandler(async (event) => {
 
   const formattedDate = date.replaceAll('-', '/');
 
+  // Check if the date is in the correct format (YYYY/MM/DD)
   if (!/^\d{4}\/\d{2}\/\d{2}$/.test(formattedDate)) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Invalid date format',
+      statusMessage: 'Invalid date format. Please use YYYY/MM/DD format.',
     });
   }
 
@@ -39,7 +40,7 @@ export default defineEventHandler(async (event) => {
 
   if (!disposicionesGenerales) {
     throw createError({
-      statusCode: 400,
+      statusCode: 404,
       statusMessage: 'disposicionesGenerales element not found',
     });
   }
@@ -49,7 +50,7 @@ export default defineEventHandler(async (event) => {
 
   if (!otrosFormatosElement) {
     throw createError({
-      statusCode: 400,
+      statusCode: 404,
       statusMessage: 'otrosFormatosElement element not found',
     });
   }
@@ -59,7 +60,7 @@ export default defineEventHandler(async (event) => {
 
   if (!linkElement) {
     throw createError({
-      statusCode: 400,
+      statusCode: 404,
       statusMessage: 'linkElement element not found',
     });
   }
@@ -74,21 +75,21 @@ export default defineEventHandler(async (event) => {
   await page.goto(docUrl);
 
   // If page text contains Error 404 message, we throw an error
-  const error404 = await page.getByText('Error 404');
+  // const error404 = await page.getByText('Error 404');
 
-  if (error404) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Error 404: Page not found',
-    });
-  }
+  // if (error404) {
+  //   throw createError({
+  //     statusCode: 404,
+  //     statusMessage: 'Error 404: Page not found',
+  //   });
+  // }
 
   //   In that page, we need to get the id="DOdocText" element
   const docTextElement = await page.$('#DOdocText');
 
   if (!docTextElement) {
     throw createError({
-      statusCode: 400,
+      statusCode: 404,
       statusMessage: 'docTextElement element not found',
     });
   }

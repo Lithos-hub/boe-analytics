@@ -8,10 +8,12 @@ export const getAreas = async (text: string) => {
         content: `Identifica las áreas afectadas por las medidas del texto y preséntalas en formato HTML.
         Usa la siguiente estructura:
           <ul class="BoeAnalytics__areas-list">
-            <li>
-              <strong class="BoeAnalytics__area-item--title">Nombre del área:</strong>
-              Descripción del impacto
-            </li>
+          <li>
+          <article class="BoeAnalytics__area-item-card">
+          <strong class="BoeAnalytics__area-item--title">NOMBRE DEL AREA EN MAYÚSCULAS</strong>
+          <p class="BoeAnalytics__area-item--description">Descripción del impacto</p>
+          </article>
+          </li>
           </ul>
           
           No incluyas comillas ni comentarios, simplemente devuelve el texto en HTML empezando y acabando con etiquetas <ul></ul>.

@@ -7,26 +7,26 @@ export const getAnalysisPoints = async (text: string) => {
         role: 'system',
         content: `Analiza el siguiente texto y clasifica los puntos en positivos, negativos y neutros. Preséntalos en formato HTML.
         Usa la siguiente estructura:
-          <div id="positive-points">
+          <div class="BoeAnalytics__section--points--positive">
             <h2>Puntos positivos</h2>
-            <ul class="BoeAnalytics__content--list">
-              <li class="BoeAnalytics__content--list-item BoeAnalytics__content--list-item--positive">
+            <ul class="BoeAnalytics__section--points--list">
+              <li class="BoeAnalytics__section--points--list-item BoeAnalytics__section--points--list-item--positive">
                 <strong>Título:</strong> Descripción
               </li>
             </ul>
           </div>
-          <div id="negative-points">
+          <div class="BoeAnalytics__section--points--negative">
             <h2>Puntos negativos</h2>
-            <ul class="BoeAnalytics__content--list">
-              <li class="BoeAnalytics__content--list-item BoeAnalytics__content--list-item--negative">
+            <ul class="BoeAnalytics__section--points--list">
+              <li class="BoeAnalytics__section--points--list-item BoeAnalytics__section--points--list-item--negative">
                 <strong>Título:</strong> Descripción
               </li>
             </ul>
           </div>
-          <div id="neutral-points">
+          <div class="BoeAnalytics__section--points--neutral">
             <h2>Puntos neutros</h2>
-            <ul class="BoeAnalytics__content--list">
-              <li class="BoeAnalytics__content--list-item BoeAnalytics__content--list-item--neutral">
+            <ul class="BoeAnalytics__section--points--list">
+              <li class="BoeAnalytics__section--points--list-item BoeAnalytics__section--points--list-item--neutral">
                 <strong>Título:</strong> Descripción
               </li>
             </ul>
