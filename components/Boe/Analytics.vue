@@ -188,19 +188,19 @@ export default defineComponent({
             chunkAreas,
             chunkAnalysisPoints,
           ] = await Promise.all([
-            $fetch('/api/boe/main-points', {
+            $fetch('/api/html/main-points', {
               method: 'POST',
               body: { text: chunk },
             }),
-            $fetch('/api/boe/keywords', {
+            $fetch('/api/html/keywords', {
               method: 'POST',
               body: { text: chunk },
             }),
-            $fetch('/api/boe/areas', {
+            $fetch('/api/html/areas', {
               method: 'POST',
               body: { text: chunk },
             }),
-            $fetch('/api/boe/analysis-points', {
+            $fetch('/api/html/analysis-points', {
               method: 'POST',
               body: { text: chunk },
             }),

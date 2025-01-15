@@ -68,7 +68,7 @@ export default defineComponent({
         scrappedBoeData.value = boeScrapData.value;
 
         const { data } = await useFetch<BoeSummaryResponse>(
-          `/api/boe/summary`,
+          `/api/html/summary`,
           {
             method: 'POST',
             body: {
