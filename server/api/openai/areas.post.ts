@@ -1,19 +1,19 @@
-import { getKeywords } from '@/server/services/html/getKeywords';
-import { missingPropertyHandler } from '~/validators/errorHandlers';
+import { getAreas } from '~/server/services/openai/areas';
 import { genericErrorHandler } from '~/validators/errorHandlers';
+import { missingPropertyHandler } from '~/validators/errorHandlers';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const text = missingPropertyHandler('text', body);
 
-    const keywordsHtml = await getKeywords(text);
+    const areas = await getAreas(text);
 
     return {
-      keywordsHTML: keywordsHtml,
+      areas: JSON.parse(areas || '[]'),
     };
   } catch (error: unknown) {
-    console.error('Error in boe/keywords:', error);
+    console.error('Error in boe/areas:', error);
     genericErrorHandler(error);
   }
 });
