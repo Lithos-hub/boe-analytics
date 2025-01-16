@@ -1,15 +1,11 @@
-import { getAreas } from '@/server/services/boe/getAreas';
+import { getAreas } from '@/server/services/html/getAreas';
+import { genericErrorHandler } from '~/validators/errorHandlers';
+import { missingPropertyHandler } from '~/validators/errorHandlers';
 
 export default defineEventHandler(async (event) => {
   try {
-    const { text } = await readBody(event);
-
-    if (!text) {
-      throw createError({
-        statusCode: 400,
-        message: 'El texto es requerido',
-      });
-    }
+    const body = await readBody(event);
+    const text = missingPropertyHandler('text', body);
 
     const areasHtml = await getAreas(text);
 
@@ -18,14 +14,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error: unknown) {
     console.error('Error in boe/areas:', error);
-    throw createError({
-      statusCode:
-        error instanceof Error && 'statusCode' in error
-          ? (error as any).statusCode
-          : 500,
-      message:
-        error instanceof Error ? error.message : 'Error interno del servidor',
-      cause: error,
-    });
+    genericErrorHandler(error);
   }
 });

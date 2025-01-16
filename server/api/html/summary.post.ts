@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { missingPropertyHandler } from '~/validators/errorHandlers';
 
 /**
  * This API call is used to get the deepseek results from the given text.
@@ -12,7 +13,8 @@ const openai = new OpenAI({
 
 export default defineEventHandler(async (event) => {
   try {
-    const { text } = await readBody(event);
+    const body = await readBody(event);
+    const text = missingPropertyHandler('text', body);
 
     // First call to get the brief summary
     const briefSummary = await openai.chat.completions.create({

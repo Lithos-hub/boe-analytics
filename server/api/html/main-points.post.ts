@@ -1,15 +1,13 @@
-import { getMainPoints } from '@/server/services/boe/getMainPoints';
+import { getMainPoints } from '@/server/services/html/getMainPoints';
+import {
+  genericErrorHandler,
+  missingPropertyHandler,
+} from '~/validators/errorHandlers';
 
 export default defineEventHandler(async (event) => {
   try {
-    const { text } = await readBody(event);
-
-    if (!text) {
-      throw createError({
-        statusCode: 400,
-        message: 'El texto es requerido',
-      });
-    }
+    const body = await readBody(event);
+    const text = missingPropertyHandler('text', body);
 
     const mainPointsHtml = await getMainPoints(text);
 
@@ -18,14 +16,6 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error: unknown) {
     console.error('Error in boe/main-points:', error);
-    throw createError({
-      statusCode:
-        error instanceof Error && 'statusCode' in error
-          ? (error as any).statusCode
-          : 500,
-      message:
-        error instanceof Error ? error.message : 'Error interno del servidor',
-      cause: error,
-    });
+    genericErrorHandler(error);
   }
 });
