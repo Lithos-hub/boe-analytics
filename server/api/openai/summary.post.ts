@@ -1,5 +1,8 @@
 import { getSummary } from '~/server/services/openai/summary';
-import { missingPropertiesHandler } from '~/validators/errorHandlers';
+import {
+  genericErrorHandler,
+  missingPropertiesHandler,
+} from '~/validators/errorHandlers';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -9,8 +12,8 @@ export default defineEventHandler(async (event) => {
     const summary = await getSummary(text);
 
     return summary;
-  } catch (error) {
-    console.error('DeepSeek API error:', error);
-    return '';
+  } catch (error: unknown) {
+    console.error('Error in openai/summary:', error);
+    genericErrorHandler(error);
   }
 });

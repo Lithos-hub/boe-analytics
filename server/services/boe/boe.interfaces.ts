@@ -37,9 +37,10 @@ export interface CreateSummaryResponse {
   summary: string;
 }
 
-export interface CreateAreasParams {
+export interface CreateAreaParams {
   boe_id: number;
-  areas: Area[];
+  name: string;
+  description: string;
 }
 
 export interface CreateAreasResponse {
@@ -47,9 +48,10 @@ export interface CreateAreasResponse {
   areas: Area[];
 }
 
-export interface CreateStatisticsParams {
+export interface CreateStatisticParams {
   boe_id: number;
-  statistics: Statistic[];
+  type: string;
+  count: number;
 }
 
 export interface CreateStatisticsResponse {
@@ -57,12 +59,12 @@ export interface CreateStatisticsResponse {
   statistics: Statistic[];
 }
 
-export interface CreateMainPointsParams {
+export interface CreateMainPointParams {
   boe_id: number;
   main_points: MainPoint[];
 }
 
-export interface CreateMainPointsResponse {
+export interface CreateMainPointResponse {
   id: number;
   main_points: MainPoint[];
 }
@@ -73,9 +75,10 @@ export interface UpdateBoeSummaryParams {
   summary: string;
 }
 
-export interface UpdateBoeAreasParams {
+export interface UpdateBoeAreaParams {
   id: number;
-  areas: Area[];
+  name: string;
+  description: string;
 }
 
 export interface UpdateBoeStatisticsParams {
@@ -83,7 +86,7 @@ export interface UpdateBoeStatisticsParams {
   statistics: Statistic[];
 }
 
-export interface UpdateBoeMainPointsParams {
+export interface UpdateBoeMainPointParams {
   id: number;
   main_points: MainPoint[];
 }
@@ -97,14 +100,14 @@ export interface DeleteSummaryParams {
   id: number;
 }
 
-export interface DeleteAreasParams {
+export interface DeleteAreaParams {
   id: number;
 }
 
-export interface DeleteStatisticsParams {
+export interface DeleteStatisticParams {
   id: number;
 }
 
-export interface DeleteMainPointsParams {
+export interface DeleteMainPointParams {
   id: number;
 }
