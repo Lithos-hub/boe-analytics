@@ -9,9 +9,7 @@ export default defineEventHandler(async (event) => {
 
     const areas = await getAreas(text);
 
-    return {
-      areas: JSON.parse(areas || '[]'),
-    };
+    return JSON.parse(areas || '[]');
   } catch (error: unknown) {
     console.error('Error in boe/areas:', error);
     genericErrorHandler(error);

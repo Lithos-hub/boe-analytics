@@ -11,9 +11,7 @@ export default defineEventHandler(async (event) => {
 
     const analysisPoints = await getAnalysisPoints(text);
 
-    return {
-      analysisPoints: JSON.parse(analysisPoints || '[]'),
-    };
+    return JSON.parse(analysisPoints || '[]');
   } catch (error: unknown) {
     console.error('Error in boe/analysis-points:', error);
     genericErrorHandler(error);

@@ -9,9 +9,7 @@ export default defineEventHandler(async (event) => {
 
     const keywords = await getKeywords(text);
 
-    return {
-      keywords: JSON.parse(keywords || '[]'),
-    };
+    return JSON.parse(keywords || '[]');
   } catch (error: unknown) {
     console.error('Error in boe/keywords:', error);
     genericErrorHandler(error);

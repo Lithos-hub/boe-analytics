@@ -11,9 +11,7 @@ export default defineEventHandler(async (event) => {
 
     const mainPoints = await getMainPoints(text);
 
-    return {
-      mainPoints: JSON.parse(mainPoints || '[]'),
-    };
+    return JSON.parse(mainPoints || '[]');
   } catch (error: unknown) {
     console.error('Error in boe/main-points:', error);
     genericErrorHandler(error);
