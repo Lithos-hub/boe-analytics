@@ -4,24 +4,7 @@ import BoeManager from '~/components/Boe/Manager.vue';
 
 <template>
   <div class="Home__wrapper">
-    <Suspense>
-      <BoeManager />
-
-      <template #fallback>
-        <Card class="h-[200px] w-full p-5">
-          <div
-            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Loader
-              :status-messages="[
-                'Obteniendo texto del boletín...',
-                'Analizando el texto...',
-                'Generando resumen...',
-                'Generando estadísticas...',
-              ]" />
-          </div>
-        </Card>
-      </template>
-    </Suspense>
+    <BoeManager />
     <section class="flex w-full flex-wrap justify-center gap-5">
       <article class="grow">
         <Card>
