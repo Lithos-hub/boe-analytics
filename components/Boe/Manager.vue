@@ -9,7 +9,7 @@
             :text="summary ?? ''"
             :boe-date-raw="dateRaw"
             :boe-date="currentBoeDate"
-            :boe-link="scrapData?.url ?? ''" />
+            :boe-link="boeUrl ?? ''" />
           <Loader
             v-else
             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -50,8 +50,8 @@ interface Stats {
 const scrapData = ref<ScrapResponse | null>(null);
 
 const boeId = ref<number | null>(null);
+const boeUrl = ref<string | null>(null);
 const summary = ref<string | null>(null);
-// const stats = ref<Stats | null>(null);
 const aspects = ref<Aspect[] | null>(null);
 
 const loadingSummary = ref(true);
@@ -250,6 +250,7 @@ const getBoeData = async () => {
     }
 
     boeId.value = boeData.id;
+    boeUrl.value = boeData.url;
     summary.value = boeData.summaries?.[0]?.summary ?? null;
     aspects.value = boeData.aspects;
   } catch (e) {
