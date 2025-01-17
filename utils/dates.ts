@@ -17,3 +17,19 @@ export const isToday = (year: number, month: number, day: number) => {
   const date = new Date(year, month - 1, day);
   return date.toDateString() === today.toDateString();
 };
+
+export const getCurrentDate = () => {
+  return {
+    dateRaw: new Date().toISOString().split('T')[0],
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    day: new Date().getDate(),
+  };
+};
+
+export const getFormattedStringDate = (
+  lang: string,
+  options: Intl.DateTimeFormatOptions,
+) => {
+  return new Date().toLocaleDateString(lang, options);
+};
