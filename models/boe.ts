@@ -89,6 +89,7 @@ export interface Aspect extends BoeColumn {
 export interface BoeResponse {
   id: number;
   date: string;
+  url: string;
   summary: string | null;
   summaries: Summary[] | null;
   statistics: Statistic[] | null;
