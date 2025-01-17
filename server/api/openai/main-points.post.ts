@@ -1,13 +1,13 @@
 import { getMainPoints } from '~/server/services/openai/main-points';
 import {
   genericErrorHandler,
-  missingPropertyHandler,
+  missingPropertiesHandler,
 } from '~/validators/errorHandlers';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const text = missingPropertyHandler('text', body);
+    const { text } = missingPropertiesHandler(['text'], body);
 
     const mainPoints = await getMainPoints(text);
 

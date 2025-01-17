@@ -1,20 +1,16 @@
 import { getSummary } from '~/server/services/openai/summary';
-import { missingPropertyHandler } from '~/validators/errorHandlers';
+import { missingPropertiesHandler } from '~/validators/errorHandlers';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const text = missingPropertyHandler('text', body);
+    const { text } = missingPropertiesHandler(['text'], body);
 
     const summary = await getSummary(text);
 
-    return {
-      summary: summary ?? '',
-    };
+    return summary;
   } catch (error) {
     console.error('DeepSeek API error:', error);
-    return {
-      summary: '',
-    };
+    return '';
   }
 });

@@ -1,13 +1,13 @@
 import { getAnalysisPoints } from '~/server/services/openai/aspects';
 import {
   genericErrorHandler,
-  missingPropertyHandler,
+  missingPropertiesHandler,
 } from '~/validators/errorHandlers';
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
-    const text = missingPropertyHandler('text', body);
+    const { text } = missingPropertiesHandler(['text'], body);
 
     const analysisPoints = await getAnalysisPoints(text);
 

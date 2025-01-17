@@ -1,15 +1,17 @@
-export const missingPropertyHandler = (
-  property: string,
+export const missingPropertiesHandler = (
+  properties: string[],
   body: Record<string, any>,
 ) => {
-  if (!body[property]) {
-    throw createError({
-      statusCode: 400,
-      message: `${property} property is required`,
-    });
+  for (const property of properties) {
+    if (!body[property]) {
+      throw createError({
+        statusCode: 400,
+        message: `${property} property is required`,
+      });
+    }
   }
 
-  return body[property];
+  return body;
 };
 
 export const genericErrorHandler = (error: any) => {
