@@ -77,6 +77,10 @@ export interface Keyword extends BoeColumn {
   keyword: string;
 }
 
+export interface Summary extends BoeColumn {
+  summary: string;
+}
+
 export interface Aspect extends BoeColumn {
   type: string;
   aspect: string;
@@ -86,7 +90,8 @@ export interface BoeResponse {
   id: number;
   date: string;
   summary: string | null;
-  stats: Statistic[] | null;
+  summaries: Summary[] | null;
+  statistics: Statistic[] | null;
   main_points: MainPoint[] | null;
   keywords: Keyword[] | null;
   aspects: Aspect[] | null;
