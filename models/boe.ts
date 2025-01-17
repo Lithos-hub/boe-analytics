@@ -96,4 +96,5 @@ export interface BoeResponse {
   main_points: MainPoint[] | null;
   keywords: Keyword[] | null;
   aspects: Aspect[] | null;
+  areas: Area[] | null;
 }

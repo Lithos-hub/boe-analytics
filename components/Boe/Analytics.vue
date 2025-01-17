@@ -7,270 +7,519 @@
         {{ error }}
       </div>
 
-      <div
-        v-if="warningMessage && !error && isLoading"
-        class="BoeAnalytics__warning rounded border border-yellow-500 bg-yellow-500/10 p-5 text-yellow-200">
-        {{ warningMessage }}
-        <small class="flex gap-5">
-          <UIcon name="i-heroicons-exclamation-triangle" />
-          El documento contiene aproximadamente {{ wordsCount }} palabras.
-        </small>
-      </div>
-
-      <template v-else-if="!error && !isLoading">
-        <header class="flex items-center justify-end gap-5 pb-5">
-          <!-- Analyze again -->
-          <UButton
-            color="green"
-            variant="soft"
-            class="border border-green-500/50"
-            icon="i-heroicons-arrow-down-tray"
-            @click="downloadPDF">
-            Descargar PDF
-          </UButton>
-          <!-- Analyze again -->
-          <UButton
+      <header class="flex items-center justify-end gap-5 pb-5">
+        <!-- Download PDF -->
+        <UButton
+          color="green"
+          variant="soft"
+          class="border border-green-500/50"
+          icon="i-heroicons-arrow-down-tray"
+          @click="downloadPDF">
+          Descargar PDF
+        </UButton>
+        <!-- Analyze again -->
+        <!-- <UButton
             color="primary"
             variant="soft"
             class="border border-primary-500/50"
             icon="i-heroicons-arrow-path"
             @click="fetchAnalytics">
             Analizar de nuevo
-          </UButton>
-          <!-- Show original document -->
-          <UButton
-            color="secondary"
-            variant="soft"
-            class="border border-secondary-500/50"
-            icon="i-heroicons-arrow-top-right-on-square"
-            :to="boeData?.link"
-            target="_blank">
-            Ver BOE original
-          </UButton>
-          <!-- Show JSON || Show Analysis -->
-          <UButton
-            color="dark"
-            variant="soft"
-            disabled
-            class="border border-dark-500/50"
-            :icon="
-              showJSON
-                ? 'i-heroicons-document-chart-bar'
-                : 'i-heroicons-code-bracket'
-            "
-            @click="showJSON = !showJSON">
-            {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
-          </UButton>
-        </header>
+          </UButton> -->
+        <!-- Show original document -->
+        <UButton
+          color="secondary"
+          variant="soft"
+          class="border border-secondary-500/50"
+          icon="i-heroicons-arrow-top-right-on-square"
+          :to="boeData?.url"
+          target="_blank">
+          Ver BOE original
+        </UButton>
+        <!-- Show JSON || Show Analysis -->
+        <UButton
+          color="dark"
+          variant="soft"
+          disabled
+          class="border border-dark-500/50"
+          :icon="
+            showJSON
+              ? 'i-heroicons-document-chart-bar'
+              : 'i-heroicons-code-bracket'
+          "
+          @click="showJSON = !showJSON">
+          {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
+        </UButton>
+      </header>
 
-        <div v-if="!showJSON">
-          <!-- Main Points Section -->
-          <div class="BoeAnalytics__section--summary">
+      <p v-if="displayWarningMessage && !isLoading">
+        {{ displayWarningMessage }}
+      </p>
+
+      <div v-if="!showJSON">
+        <!-- Main Points Section -->
+        <div class="grid grid-cols-12 gap-5">
+          <div class="BoeAnalytics__section--main-points col-span-6">
             <h2>Principales puntos</h2>
-            <div v-if="mainPoints" v-html="mainPoints" />
+            <ul
+              v-if="!isLoadingMainPoints && mainPoints && mainPoints.length"
+              class="BoeAnalytics__main-points-list">
+              <li v-for="{ point } in mainPoints" :key="point">
+                {{ point }}
+              </li>
+            </ul>
+            <div
+              class="flex items-center justify-center p-5"
+              v-else-if="isLoadingMainPoints">
+              <Loader :status-messages="['Generando puntos principales...']" />
+            </div>
+            <p class="text-red-500" v-else>
+              No se han generado puntos principales.
+            </p>
           </div>
 
           <!-- Keywords Section -->
-          <div class="BoeAnalytics__section--keywords">
+          <div class="BoeAnalytics__section--keywords col-span-6">
             <h2>Palabras clave</h2>
-            <div v-if="keywords" v-html="keywords" />
-          </div>
-
-          <!-- Areas Section -->
-          <div class="BoeAnalytics__section--areas">
-            <h2>Áreas afectadas</h2>
-            <div v-if="areas" v-html="areas" />
-          </div>
-
-          <!-- Analysis Points Section -->
-          <div class="BoeAnalytics__section BoeAnalytics__section--points">
-            <h2>Aspectos a destacar</h2>
-            <div v-if="analysisPoints" v-html="analysisPoints" />
+            <ul
+              v-if="!isLoadingKeywords && keywords && keywords.length"
+              class="BoeAnalytics__keywords-list">
+              <li v-for="{ keyword } in keywords" :key="keyword">
+                <small>{{ keyword }}</small>
+              </li>
+            </ul>
+            <div
+              class="flex items-center justify-center p-5"
+              v-else-if="isLoadingKeywords">
+              <Loader :status-messages="['Generando palabras clave...']" />
+            </div>
+            <p class="text-red-500" v-else>
+              No se han generado palabras clave.
+            </p>
           </div>
         </div>
 
-        <pre v-else>{{ boeAnalysisJSON }}</pre>
-      </template>
+        <!-- Areas Section -->
+        <div class="BoeAnalytics__section--areas">
+          <h2>Áreas afectadas</h2>
+          <ul
+            v-if="!isLoadingAreas && areas && areas.length"
+            class="BoeAnalytics__areas-list">
+            <li v-for="{ name, description } in areas" :key="name">
+              <article class="BoeAnalytics__area-item-card">
+                <strong class="BoeAnalytics__area-item--title">
+                  {{ name }}
+                </strong>
+                <p class="BoeAnalytics__area-item--description">
+                  {{ description }}
+                </p>
+              </article>
+            </li>
+          </ul>
+          <div
+            class="flex items-center justify-center p-5"
+            v-else-if="isLoadingAreas">
+            <Loader :status-messages="['Generando áreas afectadas...']" />
+          </div>
+          <p class="text-red-500" v-else>No se han generado áreas afectadas.</p>
+        </div>
+
+        <!-- Analysis Points Section -->
+        <div class="BoeAnalytics__section BoeAnalytics__section--points">
+          <h2>Aspectos a destacar</h2>
+          <ul
+            v-if="
+              !isLoadingAspects && positiveAspects && positiveAspects.length
+            "
+            class="BoeAnalytics__section--points--positive">
+            <h2>Aspectos positivos</h2>
+            <li
+              v-for="{ aspect } in positiveAspects"
+              :key="aspect"
+              class="flex items-center gap-5">
+              <UIcon name="i-heroicons-check-circle" />
+              {{ aspect }}
+            </li>
+          </ul>
+          <div
+            class="flex items-center justify-center p-5"
+            v-else-if="isLoadingAspects">
+            <Loader :status-messages="['Generando aspectos a destacar...']" />
+          </div>
+          <p class="text-red-500" v-else>
+            No se han generado aspectos a destacar.
+          </p>
+
+          <ul
+            v-if="
+              !isLoadingAspects && negativeAspects && negativeAspects.length
+            "
+            class="BoeAnalytics__section--points--negative">
+            <h2>Aspectos negativos</h2>
+            <li
+              v-for="{ aspect } in negativeAspects"
+              :key="aspect"
+              class="flex items-center gap-5">
+              <UIcon name="i-heroicons-x-circle" />
+              {{ aspect }}
+            </li>
+          </ul>
+          <ul
+            v-if="!isLoadingAspects && neutralAspects && neutralAspects.length"
+            class="BoeAnalytics__section--points--neutral">
+            <h2>Aspectos neutros</h2>
+            <li
+              v-for="{ aspect } in neutralAspects"
+              :key="aspect"
+              class="flex items-center gap-5">
+              <UIcon name="i-heroicons-minus-circle" />
+              {{ aspect }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <pre v-else>{{ boeAnalysisJSON }}</pre>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import type { BoeScrapingResponse } from './Boe.interfaces';
+<script setup lang="ts">
+import type {
+  Area,
+  Aspect,
+  BoeResponse,
+  Keyword,
+  MainPoint,
+  Statistic,
+} from '~/models/boe';
+import type { ScrapResponse } from '@/server/api/scrap/scrap.interfaces';
 
-export default defineComponent({
-  props: {
-    date: {
-      type: String,
-      required: true,
+const { date } = useRoute().params;
+
+const scrapData = ref<ScrapResponse | null>(null);
+
+const boeData = ref<BoeResponse | null>(null);
+const mainPoints = ref<MainPoint[] | null>(null);
+const keywords = ref<Keyword[] | null>(null);
+const areas = ref<Area[] | null>(null);
+const aspects = ref<Aspect[] | null>(null);
+const stats = ref<Statistic[] | null>(null);
+
+const showJSON = ref(false);
+
+const error = ref<string | null>(null);
+
+const isLoadingMainPoints = ref(true);
+const isLoadingKeywords = ref(true);
+const isLoadingAreas = ref(true);
+const isLoadingAspects = ref(true);
+
+const isLoading = computed(
+  () =>
+    isLoadingMainPoints.value ||
+    isLoadingKeywords.value ||
+    isLoadingAreas.value ||
+    isLoadingAspects.value,
+);
+
+const boeId = ref<number | null>(null);
+
+const wordsCount = computed(
+  () => scrapData.value?.text?.split(' ').length ?? 0,
+);
+const displayWarningMessage = computed(() => {
+  return wordsCount.value > 35000
+    ? `El documento contiene aproximadamente ${wordsCount.value} palabras. El proceso de análisis puede demorar más de lo normal.`
+    : '';
+});
+
+const positiveAspects = computed(() =>
+  aspects.value?.filter(({ type }) => type === 'positive'),
+);
+const negativeAspects = computed(() =>
+  aspects.value?.filter(({ type }) => type === 'negative'),
+);
+const neutralAspects = computed(() =>
+  aspects.value?.filter(({ type }) => type === 'neutral'),
+);
+
+const boeAnalysisJSON = computed(() =>
+  JSON.stringify(
+    {
+      'puntos principales': mainPoints.value,
+      'palabras clave': keywords.value,
+      'áreas afectadas': areas.value,
+      'aspectos a destacar': aspects.value,
+      'aspectos positivos': positiveAspects.value,
+      'aspectos negativos': negativeAspects.value,
+      'aspectos neutros': neutralAspects.value,
     },
-  },
+    null,
+    2,
+  ),
+);
 
-  async setup(props) {
-    const error = ref<string | null>(null);
-    const mainPoints = ref<string | null>(null);
-    const keywords = ref<string | null>(null);
-    const areas = ref<string | null>(null);
-    const analysisPoints = ref<string | null>(null);
-    const showJSON = ref<boolean>(false);
-    const boeAnalysisJSON = ref<string>('');
-    const boeData = ref<BoeScrapingResponse | null>(null);
+const getBoeData = async () => {
+  const client = useSupabaseClient();
 
-    const warningMessage = ref<string | null>(null);
-    const wordsCount = ref<number>(0);
-    const isLoading = ref<boolean>(false);
+  try {
+    const { data: boeData } = await client
+      .from('boes')
+      .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
+      .eq('date', date)
+      .single<BoeResponse>();
 
-    const downloadPDF = () => {
-      const data: PDFData[] = [
-        { heading: 'Puntos principales', text: mainPoints.value || '' },
-        { heading: 'Palabras clave', text: keywords.value || '' },
-        { heading: 'Áreas afectadas', text: areas.value || '' },
-        { heading: 'Aspectos a destacar', text: analysisPoints.value || '' },
-      ];
+    // We scrap the BOE always
+    await scrapBoe();
 
-      generatePDF(data, 'boe-analysis');
-    };
-
-    const getTextChunks = (text: string): string[] => {
-      wordsCount.value = text.split(' ').length;
-
-      const maxTokens = 65536;
-      const tokenPerChar = 0.3;
-      const maxCharsPerChunk = Math.floor(maxTokens / tokenPerChar);
-
-      const chunks: string[] = [];
-      let currentIndex = 0;
-
-      while (currentIndex < text.length) {
-        let endIndex = currentIndex + maxCharsPerChunk;
-
-        if (endIndex < text.length) {
-          const lastPeriod = text.lastIndexOf('.', endIndex);
-          const lastNewline = text.lastIndexOf('\n', endIndex);
-          endIndex = Math.max(
-            lastPeriod !== -1 ? lastPeriod + 1 : 0,
-            lastNewline !== -1 ? lastNewline + 1 : 0,
-          );
-
-          if (endIndex <= currentIndex) {
-            endIndex = currentIndex + maxCharsPerChunk;
-          }
-        }
-
-        chunks.push(text.slice(currentIndex, endIndex));
-        currentIndex = endIndex;
-      }
-
-      if (chunks.length > 1) {
-        warningMessage.value =
-          'El documento a analizar es muy grande, puede que esta operación tarde unos minutos.';
-      }
-
-      return chunks;
-    };
-
-    const fetchAnalytics = async () => {
-      error.value = null;
-      isLoading.value = true;
-      const text = boeData.value?.text || '';
-      const chunks = getTextChunks(text);
-
-      try {
-        let mainPointsHtml = '';
-        let keywordsHtml = '';
-        let areasHtml = '';
-        let analysisPointsHtml = '';
-
-        for (const chunk of chunks) {
-          const [
-            chunkMainPoints,
-            chunkKeywords,
-            chunkAreas,
-            chunkAnalysisPoints,
-          ] = await Promise.all([
-            $fetch('/api/html/main-points', {
-              method: 'POST',
-              body: { text: chunk },
-            }),
-            $fetch('/api/html/keywords', {
-              method: 'POST',
-              body: { text: chunk },
-            }),
-            $fetch('/api/html/areas', {
-              method: 'POST',
-              body: { text: chunk },
-            }),
-            $fetch('/api/html/analysis-points', {
-              method: 'POST',
-              body: { text: chunk },
-            }),
-          ]);
-
-          mainPointsHtml += chunkMainPoints.mainPointsHTML || '';
-          keywordsHtml += chunkKeywords.keywordsHTML || '';
-          areasHtml += chunkAreas.areasHTML || '';
-          analysisPointsHtml += chunkAnalysisPoints.analysisPointsHTML || '';
-        }
-
-        mainPoints.value = mainPointsHtml;
-        keywords.value = keywordsHtml;
-        areas.value = areasHtml;
-        analysisPoints.value = analysisPointsHtml;
-      } catch (e) {
-        error.value =
-          'Error al cargar el análisis. Por favor, inténtelo de nuevo.';
-        console.error('Error fetching analytics:', e);
-      } finally {
-        isLoading.value = false;
-      }
-    };
-
-    // Fetch initial data
-    const { data, error: fetchError } = await useFetch<BoeScrapingResponse>(
-      `/api/scrap/${props.date}`,
-    );
-
-    // Aquí está el problema - no estamos manejando el error
-    boeData.value = data.value;
-
-    // Solución: Manejar el error explícitamente
-    if (fetchError.value) {
-      error.value =
-        fetchError.value.statusCode === 404
-          ? 'El BOE de esta fecha no existe o no se encuentra disponible'
-          : 'Error al cargar el BOE. Por favor, inténtelo de nuevo.';
-      return {
-        error,
-        downloadPDF,
-        warningMessage,
-        wordsCount,
-        isLoading,
-        mainPoints: ref(null),
-        keywords: ref(null),
-        areas: ref(null),
-        analysisPoints: ref(null),
-        showJSON: ref(false),
-        boeAnalysisJSON: ref(''),
-        boeData: ref(null),
-        fetchAnalytics: () => {}, // función vacía ya que hay error
-      };
+    // If BOE is not in the database, we need to create it
+    if (!boeData) {
+      console.error(`No BOE found for date ${date}`);
+      await postBoe();
     }
 
-    // Solo ejecutar fetchAnalytics si no hay error
-    await fetchAnalytics();
+    boeId.value = boeData?.id as number;
 
-    return {
-      error,
-      mainPoints,
-      keywords,
-      areas,
-      analysisPoints,
-      showJSON,
-      boeAnalysisJSON,
-      boeData,
-      fetchAnalytics,
-    };
-  },
+    // If Main Points are not in the database, we need to generate them
+    if (!boeData?.main_points?.length) {
+      await generateAndCreateMainPoints();
+      isLoadingMainPoints.value = false;
+    }
+    // If Keywords are not in the database, we need to generate them
+    if (!boeData?.keywords?.length) {
+      await generateAndCreateKeywords();
+      isLoadingKeywords.value = false;
+    }
+    // If Areas are not in the database, we need to generate them
+    if (!boeData?.areas?.length) {
+      await generateAndCreateAreas();
+      isLoadingAreas.value = false;
+    }
+    // If Stats are not in the database, we need to generate them
+    if (!boeData?.aspects?.length) {
+      await generateAndCreateStats();
+      isLoadingAspects.value = false;
+    }
+
+    if (boeData?.main_points?.length) {
+      mainPoints.value = boeData.main_points;
+    }
+    if (boeData?.keywords?.length) {
+      keywords.value = boeData.keywords;
+    }
+    if (boeData?.areas?.length) {
+      areas.value = boeData.areas;
+    }
+    if (boeData?.aspects?.length) {
+      aspects.value = boeData.aspects;
+    }
+  } catch (e) {
+    console.error(e);
+    error.value = 'Error al obtener los datos del BOE';
+  } finally {
+    isLoadingMainPoints.value = false;
+    isLoadingKeywords.value = false;
+    isLoadingAreas.value = false;
+    isLoadingAspects.value = false;
+  }
+};
+
+const scrapBoe = async () => {
+  const { data: boeScrapData, error } = await useFetch<ScrapResponse>(
+    `/api/scrap/${date}`,
+  );
+
+  if (error.value) {
+    console.error('Error scraping BOE data:', error.value);
+    return;
+  }
+
+  scrapData.value = boeScrapData.value;
+};
+
+const postBoe = async () => {
+  const client = useSupabaseClient();
+
+  const { data, error } = await client
+    .from('boes')
+    .insert({
+      date,
+      url: scrapData.value?.url ?? '',
+    })
+    .select();
+
+  if (error) {
+    console.error('Error creating BOE:', error);
+    return;
+  }
+
+  boeId.value = data[0].id;
+};
+
+const generateAndCreateKeywords = async () => {
+  const { data, error } = await useFetch<Keyword[]>(`/api/openai/keywords`, {
+    method: 'POST',
+    body: {
+      text: scrapData.value?.text ?? '',
+    },
+  });
+
+  if (error.value) {
+    console.error('Error getting keywords:', error.value);
+    return;
+  }
+
+  keywords.value = data.value ?? null;
+
+  await postKeywords();
+};
+
+const generateAndCreateAreas = async () => {
+  const { data, error } = await useFetch<Area[]>(`/api/openai/areas`, {
+    method: 'POST',
+    body: {
+      text: scrapData.value?.text ?? '',
+    },
+  });
+
+  if (error.value) {
+    console.error('Error getting areas:', error.value);
+    return;
+  }
+
+  areas.value = data.value ?? null;
+
+  await postAreas();
+};
+
+const generateAndCreateStats = async () => {
+  const { data, error } = await useFetch<Aspect[]>(
+    `/api/openai/analysis-points`,
+    {
+      method: 'POST',
+      body: {
+        text: scrapData.value?.text ?? '',
+      },
+    },
+  );
+
+  if (error.value) {
+    console.error('Error getting stats:', error.value);
+    return;
+  }
+
+  aspects.value = data.value ?? null;
+
+  await postAspects();
+  await postStats();
+};
+
+const postKeywords = async () => {
+  const client = useSupabaseClient();
+
+  if (!keywords.value) {
+    return;
+  }
+
+  keywords.value.forEach(async ({ keyword }) => {
+    await client.from('keywords').insert({
+      boe_id: boeId.value,
+      keyword,
+    });
+  });
+};
+
+const postAreas = async () => {
+  const client = useSupabaseClient();
+
+  if (!areas.value) {
+    return;
+  }
+
+  areas.value.forEach(async ({ name, description }) => {
+    await client.from('areas').insert({
+      boe_id: boeId.value,
+      name,
+      description,
+    });
+  });
+};
+
+const postAspects = async () => {
+  const client = useSupabaseClient();
+
+  if (!aspects.value) {
+    return;
+  }
+
+  aspects.value.forEach(async ({ aspect, type }) => {
+    await client.from('aspects').insert({
+      boe_id: boeId.value,
+      aspect,
+      type,
+    });
+  });
+};
+
+const postStats = async () => {
+  const client = useSupabaseClient();
+
+  if (!stats.value) {
+    return;
+  }
+
+  Object.entries(stats.value).forEach(async ([key, value]) => {
+    await client.from('statistics').insert({
+      boe_id: boeId.value,
+      type: key,
+      count: value,
+    });
+  });
+};
+
+const generateAndCreateMainPoints = async () => {
+  const { data, error } = await useFetch<MainPoint[]>(
+    `/api/openai/main-points`,
+    {
+      method: 'POST',
+      body: {
+        text: scrapData.value?.text ?? '',
+      },
+    },
+  );
+
+  if (error.value) {
+    console.error('Error getting main points:', error.value);
+    return;
+  }
+
+  mainPoints.value = data.value ?? null;
+
+  await postMainPoints();
+};
+
+const postMainPoints = async () => {
+  const client = useSupabaseClient();
+
+  if (!mainPoints.value) {
+    return;
+  }
+
+  mainPoints.value.forEach(async ({ point }) => {
+    await client.from('main_points').insert({
+      boe_id: boeId.value,
+      point,
+    });
+  });
+};
+
+const downloadPDF = () => {
+  console.log('downloadPDF');
+};
+
+onMounted(async () => {
+  await getBoeData();
 });
 </script>
 
@@ -292,7 +541,7 @@ export default defineComponent({
 
   // Main sections
   &__section {
-    &--summary,
+    &--main-points,
     &--areas,
     &--keywords,
     &--points {
@@ -301,13 +550,13 @@ export default defineComponent({
       }
     }
 
-    &--summary :deep() {
+    &--main-points {
       ul {
         @apply flex flex-col gap-2;
       }
     }
 
-    &--areas :deep() {
+    &--areas {
       ul {
         @apply grid grid-cols-3 gap-5;
       }
@@ -325,53 +574,51 @@ export default defineComponent({
       }
     }
 
-    &--keywords :deep() {
+    &--keywords {
       ul {
         @apply flex flex-wrap gap-2;
 
         li {
-          @apply bg-primary/20 rounded px-5 py-1 text-sm font-bold;
+          @apply bg-primary/10 rounded-full border border-primary-500 px-5 py-1 text-sm font-bold text-primary-200;
         }
       }
     }
 
     // Puntos de análisis
     &--points {
-      :deep() {
-        .BoeAnalytics__section--points--positive {
-          @apply my-5 rounded border border-green-500 bg-green-500/10 p-5 text-green-200;
+      .BoeAnalytics__section--points--positive {
+        @apply my-5 rounded border border-green-500 bg-green-500/10 p-5 text-green-200;
 
-          h2 {
-            @apply pt-0 font-bold text-green-500;
-          }
-
-          li strong {
-            @apply min-w-[400px];
-          }
+        h2 {
+          @apply my-0 bg-transparent pt-0 font-bold text-green-500;
         }
 
-        .BoeAnalytics__section--points--negative {
-          @apply my-5 rounded border border-red-500 bg-red-500/10 p-5 text-red-200;
+        li strong {
+          @apply min-w-[400px];
+        }
+      }
 
-          h2 {
-            @apply pt-0 font-bold text-red-500;
-          }
+      .BoeAnalytics__section--points--negative {
+        @apply my-5 rounded border border-red-500 bg-red-500/10 p-5 text-red-200;
 
-          li strong {
-            @apply min-w-[400px];
-          }
+        h2 {
+          @apply my-0 bg-transparent pt-0 font-bold text-red-500;
         }
 
-        .BoeAnalytics__section--points--neutral {
-          @apply my-5 rounded border border-slate-400 bg-slate-400/10 p-5 text-slate-200;
+        li strong {
+          @apply min-w-[400px];
+        }
+      }
 
-          h2 {
-            @apply pt-0 font-bold text-slate-500;
-          }
+      .BoeAnalytics__section--points--neutral {
+        @apply my-5 rounded border border-slate-400 bg-slate-400/10 p-5 text-slate-200;
 
-          li strong {
-            @apply min-w-[400px];
-          }
+        h2 {
+          @apply my-0 bg-transparent pt-0 font-bold text-slate-500;
+        }
+
+        li strong {
+          @apply min-w-[400px];
         }
       }
     }
