@@ -18,6 +18,11 @@ You will need to create a `.env` file in the project root with the following var
 
 ```
 DEEPSEEK_APIKEY=your-api-key
+
+# In order to use the backend integration with Supabase, you will need to create a `.env` file in the project root with the following variables:
+# I will create a function to generate the database and tables in Supabase to help anyone who wants to try the project.
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-key
 ```
 
 ## Features
