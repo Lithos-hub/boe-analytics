@@ -7,20 +7,28 @@
         {{ error }}
       </div>
 
-      <header
-        class="flex items-center justify-end gap-5 pb-5"
-        v-if="dataAvailable">
-        <!-- Download PDF -->
-        <UButton
-          color="green"
-          variant="soft"
-          class="border border-green-500/50"
-          icon="i-heroicons-arrow-down-tray"
-          @click="downloadPDF">
-          Descargar PDF
-        </UButton>
-        <!-- Analyze again -->
-        <!-- <UButton
+      <header class="grid grid-cols-12 gap-5 pb-5" v-if="dataAvailable">
+        <div class="col-span-6 flex items-center gap-5 text-yellow-500">
+          <div v-if="wordsCount > 100">
+            <UIcon name="i-heroicons-exclamation-triangle" class="h-6 w-6" />
+            <small>
+              El documento contiene aproximadamente {{ wordsCount }} palabras.
+              El proceso de análisis puede demorar más de lo normal.
+            </small>
+          </div>
+        </div>
+        <div class="col-span-6 flex justify-end gap-2">
+          <!-- Download PDF -->
+          <UButton
+            color="green"
+            variant="soft"
+            class="border border-green-500/50"
+            icon="i-heroicons-arrow-down-tray"
+            @click="downloadPDF">
+            Descargar PDF
+          </UButton>
+          <!-- Analyze again -->
+          <!-- <UButton
             color="primary"
             variant="soft"
             class="border border-primary-500/50"
@@ -28,48 +36,44 @@
             @click="fetchAnalytics">
             Analizar de nuevo
           </UButton> -->
-        <!-- Show original document -->
-        <UButton
-          color="secondary"
-          variant="soft"
-          class="border border-secondary-500/50"
-          icon="i-heroicons-arrow-top-right-on-square"
-          :to="boeData?.url"
-          target="_blank">
-          Ver BOE original
-        </UButton>
-        <!-- Show JSON || Show Analysis -->
-        <UButton
-          color="dark"
-          variant="soft"
-          disabled
-          class="border border-dark-500/50"
-          :icon="
-            showJSON
-              ? 'i-heroicons-document-chart-bar'
-              : 'i-heroicons-code-bracket'
-          "
-          @click="showJSON = !showJSON">
-          {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
-        </UButton>
+          <!-- Show original document -->
+          <UButton
+            color="secondary"
+            variant="soft"
+            class="border border-secondary-500/50"
+            icon="i-heroicons-arrow-top-right-on-square"
+            :to="boeUrl"
+            target="_blank">
+            Ver BOE original
+          </UButton>
+          <!-- Show JSON || Show Analysis -->
+          <UButton
+            color="dark"
+            variant="soft"
+            class="border border-dark-500/50"
+            :icon="
+              showJSON
+                ? 'i-heroicons-document-chart-bar'
+                : 'i-heroicons-code-bracket'
+            "
+            @click="showJSON = !showJSON">
+            {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
+          </UButton>
+        </div>
       </header>
 
-      <p v-if="displayWarningMessage && !isLoading">
-        {{ displayWarningMessage }}
-      </p>
-
-      <div v-if="!showJSON && dataAvailable">
+      <div v-if="!showJSON">
         <!-- Main Points Section -->
         <div class="grid grid-cols-12 gap-5">
           <div class="BoeAnalytics__section--main-points col-span-6">
             <h2>Principales puntos</h2>
-            <ul
+            <ol
               v-if="!isLoadingMainPoints && mainPoints && mainPoints.length"
               class="BoeAnalytics__main-points-list">
-              <li v-for="{ point } in mainPoints" :key="point">
+              <li v-for="point in mainPoints" :key="point" class="list-decimal">
                 {{ point }}
               </li>
-            </ul>
+            </ol>
             <div
               class="flex items-center justify-center p-5"
               v-else-if="isLoadingMainPoints">
@@ -86,7 +90,7 @@
             <ul
               v-if="!isLoadingKeywords && keywords && keywords.length"
               class="BoeAnalytics__keywords-list">
-              <li v-for="{ keyword } in keywords" :key="keyword">
+              <li v-for="keyword in keywords" :key="keyword">
                 <small>{{ keyword }}</small>
               </li>
             </ul>
@@ -136,11 +140,15 @@
             class="BoeAnalytics__section--points--positive">
             <h2>Aspectos positivos</h2>
             <li
-              v-for="{ aspect } in positiveAspects"
-              :key="aspect"
-              class="flex items-center gap-5">
-              <UIcon name="i-heroicons-check-circle" />
-              {{ aspect }}
+              v-for="{ aspect, description } in positiveAspects"
+              :key="aspect">
+              <div class="flex flex-col gap-2 py-5">
+                <strong class="flex items-center gap-2">
+                  <UIcon name="i-heroicons-check-circle" class="h-6 w-6" />
+                  {{ aspect }}
+                </strong>
+                <p>{{ description }}</p>
+              </div>
             </li>
           </ul>
           <div
@@ -159,31 +167,43 @@
             class="BoeAnalytics__section--points--negative">
             <h2>Aspectos negativos</h2>
             <li
-              v-for="{ aspect } in negativeAspects"
-              :key="aspect"
-              class="flex items-center gap-5">
-              <UIcon name="i-heroicons-x-circle" />
-              {{ aspect }}
+              v-for="{ aspect, description } in negativeAspects"
+              :key="aspect">
+              <div class="flex flex-col gap-2 py-5">
+                <strong class="flex items-center gap-2">
+                  <UIcon name="i-heroicons-x-circle" class="h-6 w-6" />
+                  {{ aspect }}
+                </strong>
+                <p>{{ description }}</p>
+              </div>
             </li>
           </ul>
           <ul
             v-if="!isLoadingAspects && neutralAspects && neutralAspects.length"
             class="BoeAnalytics__section--points--neutral">
             <h2>Aspectos neutros</h2>
-            <li
-              v-for="{ aspect } in neutralAspects"
-              :key="aspect"
-              class="flex items-center gap-5">
-              <UIcon name="i-heroicons-minus-circle" />
-              {{ aspect }}
+            <li v-for="{ aspect, description } in neutralAspects" :key="aspect">
+              <div class="flex flex-col gap-2 py-5">
+                <strong class="flex items-center gap-2">
+                  <UIcon name="i-heroicons-minus-circle" class="h-6 w-6" />
+                  {{ aspect }}
+                </strong>
+                <p>{{ description }}</p>
+              </div>
             </li>
           </ul>
         </div>
       </div>
 
-      <pre v-else-if="showJSON && dataAvailable">{{ boeAnalysisJSON }}</pre>
+      <pre
+        v-else-if="showJSON"
+        class="overflow-x-auto rounded-2xl bg-dark-950 p-5 text-green-500"
+        >{{ boeAnalysisJSON }}</pre
+      >
 
-      <div v-else class="flex flex-col items-center justify-center gap-5">
+      <div
+        v-else-if="!dataAvailable && !isLoading"
+        class="flex flex-col items-center justify-center gap-5">
         <p class="text-red-500">
           El BOE de hoy no está disponible. Inténtalo más tarde o consulta el
           BOE de otra fecha usando el calendario.
@@ -219,10 +239,10 @@ const { date } = useRoute().params;
 const router = useRouter();
 
 const scrapData = ref<ScrapResponse | null>(null);
+const boeUrl = ref<string | null>(null);
 
-const boeData = ref<BoeResponse | null>(null);
-const mainPoints = ref<MainPoint[] | null>(null);
-const keywords = ref<Keyword[] | null>(null);
+const mainPoints = ref<string[] | null>(null);
+const keywords = ref<string[] | null>(null);
 const areas = ref<Area[] | null>(null);
 const aspects = ref<Aspect[] | null>(null);
 const stats = ref<Statistic[] | null>(null);
@@ -249,11 +269,6 @@ const boeId = ref<number | null>(null);
 const wordsCount = computed(
   () => scrapData.value?.text?.split(' ').length ?? 0,
 );
-const displayWarningMessage = computed(() => {
-  return wordsCount.value > 35000
-    ? `El documento contiene aproximadamente ${wordsCount.value} palabras. El proceso de análisis puede demorar más de lo normal.`
-    : '';
-});
 
 const positiveAspects = computed(() =>
   aspects.value?.filter(({ type }) => type === 'positive'),
@@ -265,16 +280,9 @@ const neutralAspects = computed(() =>
   aspects.value?.filter(({ type }) => type === 'neutral'),
 );
 
-const dataAvailable = computed(() => {
-  return (
-    scrapData.value &&
-    boeData.value &&
-    mainPoints.value &&
-    keywords.value &&
-    areas.value &&
-    aspects.value
-  );
-});
+const dataAvailable = computed(
+  () => mainPoints.value && keywords.value && areas.value && aspects.value,
+);
 
 const boeAnalysisJSON = computed(() =>
   JSON.stringify(
@@ -302,16 +310,14 @@ const getBoeData = async () => {
       .eq('date', date)
       .single<BoeResponse>();
 
-    // We scrap the BOE always
-    await scrapBoe();
-
-    // If BOE is not in the database, we need to create it
+    // We scrap and post the BOE only if it is not in the database
     if (!boeData) {
-      console.error(`No BOE found for date ${date}`);
+      await scrapBoe();
       await postBoe();
     }
 
     boeId.value = boeData?.id as number;
+    boeUrl.value = boeData?.url ?? null;
 
     // If Main Points are not in the database, we need to generate them
     if (!boeData?.main_points?.length) {
@@ -334,17 +340,24 @@ const getBoeData = async () => {
       isLoadingAspects.value = false;
     }
 
-    if (boeData?.main_points?.length) {
-      mainPoints.value = boeData.main_points;
+    if (boeData?.main_points) {
+      mainPoints.value = boeData.main_points.map(({ point }) => point);
     }
-    if (boeData?.keywords?.length) {
-      keywords.value = boeData.keywords;
+    if (boeData?.keywords) {
+      keywords.value = boeData.keywords.map(({ keyword }) => keyword);
     }
-    if (boeData?.areas?.length) {
-      areas.value = boeData.areas;
+    if (boeData?.areas) {
+      areas.value = boeData.areas.map(({ name, description }) => ({
+        name,
+        description,
+      }));
     }
     if (boeData?.aspects?.length) {
-      aspects.value = boeData.aspects;
+      aspects.value = boeData.aspects.map(({ aspect, type, description }) => ({
+        aspect,
+        type,
+        description,
+      }));
     }
   } catch (e) {
     console.error(e);
@@ -390,7 +403,7 @@ const postBoe = async () => {
 };
 
 const generateAndCreateKeywords = async () => {
-  const { data, error } = await useFetch<Keyword[]>(`/api/openai/keywords`, {
+  const { error } = await useFetch<string[]>(`/api/openai/keywords`, {
     method: 'POST',
     body: {
       text: scrapData.value?.text ?? '',
@@ -402,13 +415,11 @@ const generateAndCreateKeywords = async () => {
     return;
   }
 
-  keywords.value = data.value ?? null;
-
   await postKeywords();
 };
 
 const generateAndCreateAreas = async () => {
-  const { data, error } = await useFetch<Area[]>(`/api/openai/areas`, {
+  const { error } = await useFetch<Area[]>(`/api/openai/areas`, {
     method: 'POST',
     body: {
       text: scrapData.value?.text ?? '',
@@ -420,31 +431,40 @@ const generateAndCreateAreas = async () => {
     return;
   }
 
-  areas.value = data.value ?? null;
-
   await postAreas();
 };
 
 const generateAndCreateStats = async () => {
-  const { data, error } = await useFetch<Aspect[]>(
-    `/api/openai/analysis-points`,
-    {
-      method: 'POST',
-      body: {
-        text: scrapData.value?.text ?? '',
-      },
+  const { error } = await useFetch<Aspect[]>(`/api/openai/analysis-points`, {
+    method: 'POST',
+    body: {
+      text: scrapData.value?.text ?? '',
     },
-  );
+  });
 
   if (error.value) {
     console.error('Error getting stats:', error.value);
     return;
   }
 
-  aspects.value = data.value ?? null;
-
   await postAspects();
   await postStats();
+};
+
+const generateAndCreateMainPoints = async () => {
+  const { error } = await useFetch<MainPoint[]>(`/api/openai/main-points`, {
+    method: 'POST',
+    body: {
+      text: scrapData.value?.text ?? '',
+    },
+  });
+
+  if (error.value) {
+    console.error('Error getting main points:', error.value);
+    return;
+  }
+
+  await postMainPoints();
 };
 
 const postKeywords = async () => {
@@ -454,12 +474,22 @@ const postKeywords = async () => {
     return;
   }
 
-  keywords.value.forEach(async ({ keyword }) => {
-    await client.from('keywords').insert({
-      boe_id: boeId.value,
-      keyword,
-    });
-  });
+  const { error } = await client
+    .from('keywords')
+    .insert(
+      keywords.value.map((keyword) => ({
+        boe_id: boeId.value,
+        keyword,
+      })),
+    )
+    .select();
+
+  if (error) {
+    console.error('Error saving keywords:', error);
+    return;
+  }
+
+  keywords.value = data.value?.map(({ keyword }) => keyword) ?? null;
 };
 
 const postAreas = async () => {
@@ -469,13 +499,27 @@ const postAreas = async () => {
     return;
   }
 
-  areas.value.forEach(async ({ name, description }) => {
-    await client.from('areas').insert({
-      boe_id: boeId.value,
+  const { data, error } = await client
+    .from('areas')
+    .insert(
+      areas.value.map(({ name, description }) => ({
+        boe_id: boeId.value,
+        name,
+        description,
+      })),
+    )
+    .select();
+
+  if (error) {
+    console.error('Error saving areas:', error);
+    return;
+  }
+
+  areas.value =
+    data.value?.map(({ name, description }) => ({
       name,
       description,
-    });
-  });
+    })) ?? null;
 };
 
 const postAspects = async () => {
@@ -485,13 +529,27 @@ const postAspects = async () => {
     return;
   }
 
-  aspects.value.forEach(async ({ aspect, type }) => {
-    await client.from('aspects').insert({
-      boe_id: boeId.value,
+  const { data, error } = await client
+    .from('aspects')
+    .insert(
+      aspects.value.map(({ aspect, type }) => ({
+        boe_id: boeId.value,
+        aspect,
+        type,
+      })),
+    )
+    .select();
+
+  if (error) {
+    console.error('Error saving aspects:', error);
+    return;
+  }
+
+  aspects.value =
+    data.value?.map(({ aspect, type }) => ({
       aspect,
       type,
-    });
-  });
+    })) ?? null;
 };
 
 const postStats = async () => {
@@ -501,34 +559,23 @@ const postStats = async () => {
     return;
   }
 
-  Object.entries(stats.value).forEach(async ([key, value]) => {
-    await client.from('statistics').insert({
-      boe_id: boeId.value,
-      type: key,
-      count: value,
-    });
-  });
-};
+  const { data, error } = await client
+    .from('statistics')
+    .insert(
+      Object.entries(stats.value).map(([key, value]) => ({
+        boe_id: boeId.value,
+        type: key,
+        count: value,
+      })),
+    )
+    .select();
 
-const generateAndCreateMainPoints = async () => {
-  const { data, error } = await useFetch<MainPoint[]>(
-    `/api/openai/main-points`,
-    {
-      method: 'POST',
-      body: {
-        text: scrapData.value?.text ?? '',
-      },
-    },
-  );
-
-  if (error.value) {
-    console.error('Error getting main points:', error.value);
+  if (error) {
+    console.error('Error saving stats:', error);
     return;
   }
 
-  mainPoints.value = data.value ?? null;
-
-  await postMainPoints();
+  stats.value = data.value ?? null;
 };
 
 const postMainPoints = async () => {
@@ -538,12 +585,22 @@ const postMainPoints = async () => {
     return;
   }
 
-  mainPoints.value.forEach(async ({ point }) => {
-    await client.from('main_points').insert({
-      boe_id: boeId.value,
-      point,
-    });
-  });
+  const { error } = await client
+    .from('main_points')
+    .insert(
+      mainPoints.value.map((point) => ({
+        boe_id: boeId.value,
+        point,
+      })),
+    )
+    .select();
+
+  if (error) {
+    console.error('Error saving main points:', error);
+    return;
+  }
+
+  mainPoints.value = data.value?.map(({ point }) => point) ?? null;
 };
 
 const downloadPDF = () => {
@@ -567,7 +624,8 @@ onMounted(async () => {
     @apply text-justify;
   }
 
-  ul {
+  ul,
+  ol {
     @apply px-5;
   }
 
@@ -583,8 +641,8 @@ onMounted(async () => {
     }
 
     &--main-points {
-      ul {
-        @apply flex flex-col gap-2;
+      ol {
+        @apply flex flex-col gap-2 text-justify;
       }
     }
 
@@ -602,7 +660,7 @@ onMounted(async () => {
       }
 
       .BoeAnalytics__area-item--description {
-        @apply p-5 text-justify text-sm;
+        @apply px-5 pb-5 text-justify text-sm;
       }
     }
 
