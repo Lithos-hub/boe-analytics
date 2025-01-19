@@ -9,6 +9,7 @@ export const getAnalysisPoints = async (text: string) => {
         
         Debes devolver un array de objetos con las siguientes propiedades:
           - aspect: string (aspect description)
+          - description: string (description of the aspect in a few sentences explaining why it is positive, negative or neutral)
           - type: string ("positive", "negative" or "neutral")
 
         Considera que los aspectos positivos son aquellos que tienen un efecto positivo en la sociedad, los aspectos negativos son aquellos que tienen un efecto negativo en la sociedad y los aspectos neutros son aquellos que no tienen un efecto claro en la sociedad.
