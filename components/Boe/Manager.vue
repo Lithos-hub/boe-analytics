@@ -99,6 +99,11 @@ const scrapBoe = async () => {
 const postBoe = async () => {
   const client = useSupabaseClient();
 
+  // If no scrap data, we don't need to post the BOE
+  if (!scrapData.value) {
+    return;
+  }
+
   const { data, error } = await client
     .from('boes')
     .insert({
@@ -116,7 +121,7 @@ const postBoe = async () => {
 };
 
 const generateAndCreateSummary = async () => {
-  if (summary.value) {
+  if (summary.value || !scrapData.value) {
     return;
   }
 
@@ -138,7 +143,7 @@ const generateAndCreateSummary = async () => {
 };
 
 const generateAndCreateStats = async () => {
-  if (stats.value) {
+  if (stats.value || !scrapData.value) {
     return;
   }
 
