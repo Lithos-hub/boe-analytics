@@ -19,13 +19,12 @@
       </div>
     </div>
   </div>
-  <div class="flex justify-end gap-5 pt-5">
+  <div class="flex justify-end gap-5 pt-5" v-if="boeLink">
     <UButton
       color="primary"
       variant="soft"
       icon="i-heroicons-document-chart-bar"
       class="border border-primary-500/50"
-      :disabled="!text"
       :to="`/boe/${boeDateRaw}`">
       Consultar análisis
     </UButton>
@@ -34,7 +33,6 @@
       variant="soft"
       class="border border-secondary-500/50"
       icon="i-heroicons-arrow-top-right-on-square"
-      :disabled="!boeLink"
       :to="boeLink"
       target="_blank">
       Ver BOE original

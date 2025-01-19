@@ -14,6 +14,8 @@
             v-else
             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             :status-messages="[
+              'Accediendo al documento...',
+              'Extrayendo información...',
               'Generando resumen...',
               'Guardando en base de datos...',
             ]" />
@@ -21,7 +23,7 @@
       </article>
       <article class="col-span-12 md:col-span-4">
         <Card class="h-full min-h-[400px]">
-          <BoeStats v-if="!loadingStats" :stats="stats" />
+          <BoeStats v-if="!loadingStats" :stats />
           <Loader
             v-else
             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -58,16 +60,16 @@ const loadingSummary = ref(true);
 const loadingStats = ref(true);
 
 const stats = computed(() => {
-  return (
-    aspects.value?.reduce(
-      (acc, curr) => {
-        acc[curr.type as keyof Stats] =
-          (acc[curr.type as keyof Stats] || 0) + 1;
-        return acc;
-      },
-      { positive: 0, negative: 0, neutral: 0 } as Stats,
-    ) ?? null
-  );
+  return aspects.value?.length
+    ? aspects.value?.reduce(
+        (acc, curr) => {
+          acc[curr.type as keyof Stats] =
+            (acc[curr.type as keyof Stats] || 0) + 1;
+          return acc;
+        },
+        { positive: 0, negative: 0, neutral: 0 } as Stats,
+      )
+    : null;
 });
 
 // boeDate is the date in the format 'lunes 6 de enero de 2025'

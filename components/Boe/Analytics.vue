@@ -7,7 +7,9 @@
         {{ error }}
       </div>
 
-      <header class="flex items-center justify-end gap-5 pb-5">
+      <header
+        class="flex items-center justify-end gap-5 pb-5"
+        v-if="dataAvailable">
         <!-- Download PDF -->
         <UButton
           color="green"
@@ -56,7 +58,7 @@
         {{ displayWarningMessage }}
       </p>
 
-      <div v-if="!showJSON">
+      <div v-if="!showJSON && dataAvailable">
         <!-- Main Points Section -->
         <div class="grid grid-cols-12 gap-5">
           <div class="BoeAnalytics__section--main-points col-span-6">
@@ -179,7 +181,24 @@
         </div>
       </div>
 
-      <pre v-else>{{ boeAnalysisJSON }}</pre>
+      <pre v-else-if="showJSON && dataAvailable">{{ boeAnalysisJSON }}</pre>
+
+      <div v-else class="flex flex-col items-center justify-center gap-5">
+        <p class="text-red-500">
+          El BOE de hoy no está disponible. Inténtalo más tarde o consulta el
+          BOE de otra fecha usando el calendario.
+        </p>
+
+        <!-- Button to come back -->
+        <UButton
+          color="primary"
+          variant="soft"
+          class="border border-primary-500/50"
+          icon="i-heroicons-arrow-left"
+          @click="router.back()">
+          Volver
+        </UButton>
+      </div>
     </div>
   </div>
 </template>
@@ -196,6 +215,8 @@ import type {
 import type { ScrapResponse } from '@/server/api/scrap/scrap.interfaces';
 
 const { date } = useRoute().params;
+
+const router = useRouter();
 
 const scrapData = ref<ScrapResponse | null>(null);
 
@@ -243,6 +264,17 @@ const negativeAspects = computed(() =>
 const neutralAspects = computed(() =>
   aspects.value?.filter(({ type }) => type === 'neutral'),
 );
+
+const dataAvailable = computed(() => {
+  return (
+    scrapData.value &&
+    boeData.value &&
+    mainPoints.value &&
+    keywords.value &&
+    areas.value &&
+    aspects.value
+  );
+});
 
 const boeAnalysisJSON = computed(() =>
   JSON.stringify(
