@@ -193,13 +193,18 @@ const postAspects = async () => {
     return;
   }
 
-  aspects.value.forEach(async ({ aspect, type }) => {
-    await client.from('aspects').insert({
+  const { error } = await client.from('aspects').insert(
+    aspects.value.map(({ aspect, type }) => ({
       boe_id: boeId.value,
       aspect,
       type,
-    });
-  });
+    })),
+  );
+
+  if (error) {
+    console.error('Error saving aspects:', error);
+    return;
+  }
 };
 
 const postStats = async () => {
@@ -209,13 +214,18 @@ const postStats = async () => {
     return;
   }
 
-  Object.entries(stats.value).forEach(async ([key, value]) => {
-    await client.from('statistics').insert({
+  const { error } = await client.from('statistics').insert(
+    Object.entries(stats.value).map(([key, value]) => ({
       boe_id: boeId.value,
       type: key,
       count: value,
-    });
-  });
+    })),
+  );
+
+  if (error) {
+    console.error('Error saving stats:', error);
+    return;
+  }
 };
 
 const getBoeData = async () => {
