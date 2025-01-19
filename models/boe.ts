@@ -49,8 +49,8 @@ aspect (Text) - A positive, negative, or neutral aspect from the BOE.
  */
 
 export interface BoeColumn {
-  id: number;
-  boe_id: number;
+  id?: number;
+  boe_id?: number;
 }
 
 export interface Boe {
@@ -84,6 +84,7 @@ export interface Summary extends BoeColumn {
 export interface Aspect extends BoeColumn {
   type: string;
   aspect: string;
+  description: string;
 }
 
 export interface BoeResponse {
