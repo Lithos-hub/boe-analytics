@@ -20,14 +20,12 @@ You will need to create a `.env` file in the project root with the following var
 DEEPSEEK_APIKEY=your-api-key
 ```
 
-## TODO
+## Features
 
 - [x] Generation of a summary and brief statistics of the BOE for the current date in the "Home" section, or root route `/`.
 - [x] Generation of a detailed analysis of the BOE for a specific date in the route `/boe/:date`.
 - [x] Query a BOE from the calendar.
-- [ ] Split BOE text when exceeding the maximum tokens (65536)
-- [ ] Global analytics of BOEs published in a year.
-- [ ] Database storage of analyzed BOEs and generated summaries.
+- [x] Backend integration with Supabase.
 
 ## Setup
 
