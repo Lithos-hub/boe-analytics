@@ -7,6 +7,7 @@
       :month-days="monthDays"
       :selected-month="selectedMonth"
       :selected-year="selectedYear"
+      :boes-available-by-dates="availableBoeListByDates"
       @set-previous-month="setPreviousMonth"
       @set-next-month="setNextMonth" />
   </div>
@@ -16,8 +17,16 @@
 import CalendarFilters from './components/CalendarFilters.vue';
 import CalendarGrid from './components/CalendarGrid.vue';
 
+const client = useSupabaseClient();
+
 const selectedMonth = ref(new Date().getMonth() + 1);
 const selectedYear = ref(new Date().getFullYear());
+
+const boesList = ref<{ date: string }[]>([]);
+
+const availableBoeListByDates = computed(
+  () => boesList.value?.map((boe) => boe.date) ?? [],
+);
 
 const monthDays = computed(() => {
   const days = new Date(
@@ -61,4 +70,17 @@ const setNextMonth = () => {
     selectedMonth.value++;
   }
 };
+
+const getAllBoes = async () => {
+  const { data, error } = await client.from('boes').select('date');
+  if (error) {
+    console.error('Error getting all BOEs:', error);
+    return;
+  }
+  boesList.value = data;
+};
+
+onMounted(async () => {
+  await getAllBoes();
+});
 </script>

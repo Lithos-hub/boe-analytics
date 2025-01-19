@@ -43,6 +43,17 @@
         <div class="absolute left-2 top-2">
           {{ day }}
         </div>
+        <div class="absolute right-2 top-2">
+          <!-- If boe available by date, show green check icon -->
+          <UIcon
+            v-if="
+              boesAvailableByDates.includes(
+                formatDate(selectedYear, selectedMonth, day),
+              )
+            "
+            name="i-heroicons-check-circle"
+            class="h-6 w-6 text-green-500" />
+        </div>
         <div class="absolute bottom-2 right-2 flex gap-2">
           <!-- Go to /boe/:date page button -->
           <UButton
@@ -81,9 +92,10 @@ interface CalendarGridProps {
   };
   selectedMonth: number;
   selectedYear: number;
+  boesAvailableByDates: string[];
 }
 
-const { monthDays } = defineProps<CalendarGridProps>();
+const { monthDays, boesAvailableByDates } = defineProps<CalendarGridProps>();
 const emits = defineEmits(['set-previous-month', 'set-next-month']);
 
 const goToPreviousMonth = () => {
