@@ -94,6 +94,7 @@ const scrapBoe = async () => {
   }
 
   scrapData.value = boeScrapData.value;
+  boeUrl.value = boeScrapData.value?.url ?? null;
 };
 
 const postBoe = async () => {
