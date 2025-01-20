@@ -1,6 +1,6 @@
 <template>
-  <div class="flex gap-5">
-    <div class="flex w-full flex-1 flex-col gap-1">
+  <div class="grid grid-cols-12 gap-2.5">
+    <!-- <div class="col-span-12">
       <label class="text-primary font-bold">Buscar</label>
       <UInput
         v-model="search"
@@ -9,27 +9,24 @@
         disabled
         placeholder="Introducte un término de búsqueda"
         icon="i-heroicons-magnifying-glass" />
-    </div>
-    <div class="flex flex-col gap-1">
+    </div> -->
+    <div class="col-span-12 md:col-span-6">
       <label class="text-primary font-bold">Mes</label>
-
       <USelectMenu
         v-model="selectedMonthModel"
         color="primary"
         :options="months"
         option-attribute="name"
-        value-attribute="id"
-        class="min-w-40" />
+        value-attribute="id" />
     </div>
-    <div class="flex flex-col gap-1">
+    <div class="col-span-12 md:col-span-6">
       <label class="text-primary font-bold">Año</label>
       <USelectMenu
         v-model="selectedYearModel"
         color="primary"
         :options="years"
         option-attribute="name"
-        value-attribute="value"
-        class="min-w-40" />
+        value-attribute="value" />
     </div>
   </div>
 </template>

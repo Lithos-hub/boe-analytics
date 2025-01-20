@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-5">
+  <div class="flex h-[410px] flex-col gap-5">
     <CalendarFilters
       v-model:selected-month-model="selectedMonth"
       v-model:selected-year-model="selectedYear" />
@@ -7,9 +7,11 @@
       :month-days="monthDays"
       :selected-month="selectedMonth"
       :selected-year="selectedYear"
+      :selected-date="selectedDate"
       :boes-available-by-dates="availableBoeListByDates"
       @set-previous-month="setPreviousMonth"
-      @set-next-month="setNextMonth" />
+      @set-next-month="setNextMonth"
+      @set-selected-date="setSelectedDate" />
   </div>
 </template>
 
@@ -21,6 +23,7 @@ const client = useSupabaseClient();
 
 const selectedMonth = ref(new Date().getMonth() + 1);
 const selectedYear = ref(new Date().getFullYear());
+const selectedDate = ref('');
 
 const boesList = ref<{ date: string }[]>([]);
 
@@ -69,6 +72,10 @@ const setNextMonth = () => {
   } else {
     selectedMonth.value++;
   }
+};
+
+const setSelectedDate = (date: string) => {
+  selectedDate.value = date;
 };
 
 const getAllBoes = async () => {

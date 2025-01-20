@@ -1,20 +1,23 @@
 <template>
-  <div class="flex w-full gap-5">
+  <div class="grid h-full w-full grid-cols-12 items-center gap-1">
     <!-- Chevron left to go to previous month -->
-    <UButton
-      icon="i-heroicons-chevron-left"
-      color="primary"
-      variant="soft"
-      :disabled="isYearLessThan1960(selectedYear - 1) && selectedMonth === 1"
-      @click="goToPreviousMonth" />
+    <div class="relative col-span-1 h-full w-full">
+      <UButton
+        icon="i-heroicons-chevron-left"
+        color="dark"
+        variant="soft"
+        class="absolute top-1/2 w-full -translate-y-1/2 border border-dark-500/50"
+        :disabled="isYearLessThan1960(selectedYear - 1) && selectedMonth === 1"
+        @click="goToPreviousMonth" />
+    </div>
 
-    <div class="grid w-full flex-1 grid-cols-7 gap-2">
-      <div
-        v-for="day in weekDays"
+    <div class="col-span-10 grid grid-cols-7 gap-1">
+      <small
+        v-for="day in weekDaysShort"
         :key="day"
         class="text-primary text-center font-bold">
         {{ day }}
-      </div>
+      </small>
 
       <div
         v-for="day in monthDays.firstDay !== 0 ? monthDays.firstDay - 1 : 0"
@@ -28,6 +31,8 @@
           'CalendarGrid__cell',
           'CalendarGrid__day-cell',
           {
+            'CalendarGrid__day-cell--selected':
+              formatDate(selectedYear, selectedMonth, day) === selectedDate,
             'CalendarGrid__day-cell--disabled': isFutureDate(
               selectedYear,
               selectedMonth,
@@ -39,11 +44,12 @@
               day,
             ),
           },
-        ]">
-        <div class="absolute left-2 top-2">
+        ]"
+        @click="handleDayClick(day)">
+        <small class="absolute left-1 top-1">
           {{ day }}
-        </div>
-        <div class="absolute right-2 top-2">
+        </small>
+        <div class="flex h-full flex-col items-end justify-end">
           <!-- If boe available by date, show green check icon -->
           <UIcon
             v-if="
@@ -52,17 +58,7 @@
               )
             "
             name="i-heroicons-check-circle"
-            class="h-6 w-6 text-green-500" />
-        </div>
-        <div class="absolute bottom-2 right-2 flex gap-2">
-          <!-- Go to /boe/:date page button -->
-          <UButton
-            v-if="!isFutureDate(selectedYear, selectedMonth, day)"
-            color="primary"
-            variant="soft"
-            icon="i-heroicons-document-chart-bar"
-            class="border border-primary-500/50"
-            :to="`/boe/${formatDate(selectedYear, selectedMonth, day)}`" />
+            class="h-4 w-4 text-green-500" />
         </div>
       </div>
 
@@ -72,17 +68,20 @@
         class="CalendarGrid__cell CalendarGrid__empty-cell" />
     </div>
     <!-- Chevron right to go to next month -->
-    <UButton
-      icon="i-heroicons-chevron-right"
-      color="primary"
-      variant="soft"
-      :disabled="isFutureDate(selectedYear, selectedMonth + 1, 1)"
-      @click="goToNextMonth" />
+    <div class="relative col-span-1 h-full w-full">
+      <UButton
+        icon="i-heroicons-chevron-right"
+        color="dark"
+        variant="soft"
+        class="absolute top-1/2 w-full -translate-y-1/2 border border-dark-500/50"
+        :disabled="isFutureDate(selectedYear, selectedMonth + 1, 1)"
+        @click="goToNextMonth" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { weekDays } from '@/components/Calendar/Calendar.const';
+import { weekDaysShort } from '@/components/Calendar/Calendar.const';
 
 interface CalendarGridProps {
   monthDays: {
@@ -92,11 +91,22 @@ interface CalendarGridProps {
   };
   selectedMonth: number;
   selectedYear: number;
+  selectedDate: string;
   boesAvailableByDates: string[];
 }
 
-const { monthDays, boesAvailableByDates } = defineProps<CalendarGridProps>();
-const emits = defineEmits(['set-previous-month', 'set-next-month']);
+const {
+  monthDays,
+  boesAvailableByDates,
+  selectedDate,
+  selectedYear,
+  selectedMonth,
+} = defineProps<CalendarGridProps>();
+const emits = defineEmits([
+  'set-previous-month',
+  'set-next-month',
+  'set-selected-date',
+]);
 
 const goToPreviousMonth = () => {
   emits('set-previous-month');
@@ -105,23 +115,39 @@ const goToPreviousMonth = () => {
 const goToNextMonth = () => {
   emits('set-next-month');
 };
+
+const handleDayClick = (day: number) => {
+  emits('set-selected-date', formatDate(selectedYear, selectedMonth, day));
+};
 </script>
 
 <style scoped lang="scss">
 .CalendarGrid {
+  $self: &;
+
   &__cell {
-    @apply text-primary relative max-h-24 min-h-24 rounded p-2 text-center font-bold;
+    @apply text-primary relative h-12 rounded p-2 text-center font-bold;
   }
 
   &__day-cell {
-    @apply bg-primary-500/10;
+    @apply border border-primary-500/20 bg-primary-500/10;
+
+    &:hover:not(#{$self}__day-cell--disabled):not(
+        #{$self}__day-cell--selected
+      ) {
+      @apply cursor-pointer bg-primary-500/20;
+    }
 
     &--disabled {
-      @apply bg-primary-800/10;
+      @apply cursor-not-allowed bg-primary-800/10;
     }
 
     &--today {
       @apply border-2 border-primary-500/50;
+    }
+
+    &--selected {
+      @apply border-2 border-secondary-500/50 bg-secondary-500/20 text-secondary-200;
     }
   }
 

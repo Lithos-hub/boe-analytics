@@ -59,6 +59,8 @@ export const weekDays = [
   'Domingo',
 ];
 
+export const weekDaysShort = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
 // The first released BOE year is 1960
 export const years = Array.from(
   { length: new Date().getFullYear() - 1960 + 1 },
