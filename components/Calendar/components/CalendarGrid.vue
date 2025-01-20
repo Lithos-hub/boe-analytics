@@ -6,6 +6,7 @@
         icon="i-heroicons-chevron-left"
         color="dark"
         variant="soft"
+        size="xs"
         class="absolute top-1/2 w-full -translate-y-1/2 border border-dark-500/50"
         :disabled="isYearLessThan1960(selectedYear - 1) && selectedMonth === 1"
         @click="goToPreviousMonth" />
@@ -46,10 +47,10 @@
           },
         ]"
         @click="handleDayClick(day)">
-        <small class="absolute left-1 top-1">
+        <small class="absolute left-1 top-1 text-xs">
           {{ day }}
         </small>
-        <div class="flex h-full flex-col items-end justify-end">
+        <div class="absolute bottom-0 right-1">
           <!-- If boe available by date, show green check icon -->
           <UIcon
             v-if="
@@ -57,8 +58,8 @@
                 formatDate(selectedYear, selectedMonth, day),
               )
             "
-            name="i-heroicons-check-circle"
-            class="h-4 w-4 text-green-500" />
+            name="i-heroicons-check"
+            class="h-3 w-3 text-green-500" />
         </div>
       </div>
 
@@ -73,6 +74,7 @@
         icon="i-heroicons-chevron-right"
         color="dark"
         variant="soft"
+        size="xs"
         class="absolute top-1/2 w-full -translate-y-1/2 border border-dark-500/50"
         :disabled="isFutureDate(selectedYear, selectedMonth + 1, 1)"
         @click="goToNextMonth" />

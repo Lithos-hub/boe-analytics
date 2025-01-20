@@ -1,8 +1,4 @@
 <template>
-  <strong class="text-primary">Estadísticas</strong>
-
-  <hr class="border-primary/10 my-5 border" />
-
   <div v-if="stats">
     <small>Aspectos positivos, negativos y neutros del boletín:</small>
     <div class="h-auto">
@@ -26,12 +22,15 @@ import {
   type ChartOptions,
   type ChartData,
 } from 'chart.js';
-import type { ProcessedBoeStats } from './Boe.interfaces';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface BoeStatsProps {
-  stats?: ProcessedBoeStats;
+  stats: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  } | null;
 }
 
 const props = defineProps<BoeStatsProps>();

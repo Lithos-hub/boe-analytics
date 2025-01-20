@@ -7,10 +7,11 @@ import { chromium } from 'playwright';
  */
 
 export default defineEventHandler(async (event) => {
-  //   First we get the date given as parameter.
-  // If it is not present, we throw an error
-  // If the format is not YYYY/MM/DD (when scraping from the website), we throw an error
-  const date = getRouterParam(event, 'date');
+  try {
+    //   First we get the date given as parameter.
+    // If it is not present, we throw an error
+    // If the format is not YYYY/MM/DD (when scraping from the website), we throw an error
+    const date = getRouterParam(event, 'date');
 
   if (!date) {
     throw createError({ statusCode: 400, statusMessage: 'Date is required' });
@@ -102,7 +103,14 @@ export default defineEventHandler(async (event) => {
 
   // We return the text and the url of the document
   return {
-    text,
-    url: docUrl,
-  };
+      text,
+      url: docUrl,
+    };
+  } catch (error) {
+    console.error('Error scraping BOE data:', error);
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Error scraping BOE data',
+    });
+  }
 });

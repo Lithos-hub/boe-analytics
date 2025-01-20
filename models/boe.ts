@@ -6,6 +6,7 @@ id (Primary Key, Auto Increment)
 date (Date, Unique) - The date of the analyzed BOE.
 url (Text) - The url of the BOE.
 created_at (Timestamp) - The timestamp when the analysis was generated.
+summary (Text) - The summary of the BOE.
 
 Table summaries
 
@@ -57,6 +58,7 @@ export interface Boe {
   id: number;
   date: string;
   url: string;
+  summary: string;
 }
 
 export interface Area extends BoeColumn {
@@ -91,11 +93,9 @@ export interface BoeResponse {
   id: number;
   date: string;
   url: string;
-  summary: string | null;
-  summaries: Summary[] | null;
-  statistics: Statistic[] | null;
-  main_points: MainPoint[] | null;
-  keywords: Keyword[] | null;
-  aspects: Aspect[] | null;
-  areas: Area[] | null;
+  summary: string;
+  main_points: MainPoint[];
+  keywords: Keyword[];
+  aspects: Aspect[];
+  areas: Area[];
 }
