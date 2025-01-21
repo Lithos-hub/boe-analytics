@@ -16,7 +16,7 @@
     <div
       class="flex items-center justify-center p-5"
       v-else-if="isLoadingAspects">
-      <Loader :status-messages="['Generando aspectos...']" />
+      <Loader :status-messages="statusMessages[type]" />
     </div>
     <p class="text-red-500" v-else>No se ha podido generar la información.</p>
   </div>
@@ -26,6 +26,12 @@
 import type { BoeAspectsProps } from './Aspects.interfaces';
 
 defineProps<BoeAspectsProps>();
+
+const statusMessages = {
+  positive: ['Generando aspectos positivos...'],
+  negative: ['Generando aspectos negativos...'],
+  neutral: ['Generando aspectos neutros...'],
+};
 </script>
 
 <style lang="scss" scoped>

@@ -44,11 +44,18 @@
       </div>
       <div
         v-if="wordsCount"
-        class="rounded-lg border border-blue-500/50 bg-blue-950 p-2.5 text-right text-blue-200">
+        class="rounded-lg border border-cyan-500/50 bg-blue-950 p-1 px-5 text-right text-cyan-200">
         <p>El documento contiene aproximadamente {{ wordsCount }} palabras.</p>
       </div>
     </header>
     <div class="Home__wrapper">
+      <section class="Home__calendar">
+        <article class="h-full">
+          <Card class="Home__calendar--card" title="Calendario">
+            <Calendar />
+          </Card>
+        </article>
+      </section>
       <section class="Home__summary">
         <article class="h-full">
           <Card class="Home__summary--card" title="Resumen">
@@ -86,32 +93,31 @@
           </Card>
         </article>
       </section>
-      <section class="Home__calendar">
-        <article class="h-full">
-          <Card class="Home__calendar--card" title="Calendario">
-            <Calendar />
-          </Card>
-        </article>
-      </section>
-      <section class="Home__analytics">
-        <article class="col-span-4">
+      <section class="Home__mainPoints">
+        <article>
           <Card title="Puntos clave del boletín">
             <BoeMainPoints
               :main-points
               :is-loading-main-points="isLoadingMainPoints" />
           </Card>
         </article>
-        <article class="col-span-4">
+      </section>
+      <section class="Home__keywords">
+        <article>
           <Card title="Palabras clave">
             <BoeKeywords :keywords :is-loading-keywords="isLoadingKeywords" />
           </Card>
         </article>
-        <article class="col-span-4">
+      </section>
+      <section class="Home__areas">
+        <article>
           <Card title="Áreas">
             <BoeAreas :areas :is-loading-areas="isLoadingAreas" />
           </Card>
         </article>
-        <article class="col-span-4">
+      </section>
+      <section class="Home__aspects Home__aspects--positive">
+        <article>
           <Card title="Aspectos positivos">
             <BoeAspects
               type="positive"
@@ -119,7 +125,9 @@
               :is-loading-aspects="isLoadingAspects" />
           </Card>
         </article>
-        <article class="col-span-4">
+      </section>
+      <section class="Home__aspects Home__aspects--negative">
+        <article>
           <Card title="Aspectos negativos">
             <BoeAspects
               type="negative"
@@ -127,7 +135,9 @@
               :is-loading-aspects="isLoadingAspects" />
           </Card>
         </article>
-        <article class="col-span-4">
+      </section>
+      <section class="Home__aspects Home__aspects--neutral">
+        <article>
           <Card title="Aspectos neutros">
             <BoeAspects
               type="neutral"
@@ -314,13 +324,13 @@ const generateAspects = async () => {
   }
 };
 
-const postBoe = async (summary: string) => {
+const postBoe = async (_summary: string) => {
   const { data, error } = await client
     .from('boes')
     .insert({
       date: dateRaw,
       url: scrapData.value?.url ?? '',
-      summary,
+      summary: _summary,
     })
     .select();
 
@@ -329,9 +339,9 @@ const postBoe = async (summary: string) => {
     return;
   }
 
-  boeId.value = data[0].id;
-  boeUrl.value = data.value?.url ?? '';
-  summary.value = data.value?.summary ?? '';
+  boeId.value = data.value[0].id;
+  boeUrl.value = scrapData.value?.url ?? '';
+  summary.value = _summary;
 };
 
 const postAspects = async (_aspects: Aspect[]) => {
@@ -368,7 +378,7 @@ const postKeywords = async (_keywords: string[]) => {
     return;
   }
 
-  keywords.value = _keywords;
+  keywords.value = _keywords.map(({ keyword }) => keyword);
 };
 
 const postAreas = async (_areas: Area[]) => {
@@ -401,7 +411,7 @@ const postMainPoints = async (_mainPoints: string[]) => {
     return;
   }
 
-  mainPoints.value = _mainPoints;
+  mainPoints.value = _mainPoints.map(({ point }) => point);
 };
 
 const getBoeData = async () => {
@@ -438,6 +448,12 @@ const getBoeData = async () => {
       mainPoints.value = boeData?.main_points.map(({ point }) => point) ?? [];
       keywords.value = boeData?.keywords.map(({ keyword }) => keyword) ?? [];
       areas.value = boeData?.areas ?? [];
+
+      isLoadingSummary.value = false;
+      isLoadingMainPoints.value = false;
+      isLoadingKeywords.value = false;
+      isLoadingAreas.value = false;
+      isLoadingAspects.value = false;
     }
 
     if (!aspects.value.length) {
@@ -487,8 +503,16 @@ onMounted(async () => {
     @apply grid grid-cols-12 gap-5;
   }
 
+  &__calendar {
+    @apply col-span-12 xl:col-span-6 2xl:col-span-3;
+
+    &--card {
+      @apply h-full;
+    }
+  }
+
   &__summary {
-    @apply col-span-4;
+    @apply col-span-4 xl:col-span-6 2xl:col-span-5;
 
     &--card {
       @apply h-full;
@@ -496,23 +520,37 @@ onMounted(async () => {
   }
 
   &__stats {
-    @apply col-span-4;
+    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
 
     &--card {
       @apply h-full;
     }
   }
 
-  &__calendar {
-    @apply col-span-4;
-
-    &--card {
-      @apply h-full;
-    }
+  &__mainPoints {
+    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
   }
 
-  &__analytics {
-    @apply col-span-12 grid w-full grid-cols-12 gap-5;
+  &__keywords {
+    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
+  }
+
+  &__areas {
+    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
+  }
+
+  &__aspects {
+    &--positive {
+      @apply col-span-12 2xl:col-span-4;
+    }
+
+    &--negative {
+      @apply col-span-12 2xl:col-span-4;
+    }
+
+    &--neutral {
+      @apply col-span-12 2xl:col-span-4;
+    }
   }
 }
 </style>
