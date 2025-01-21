@@ -1,7 +1,7 @@
 <template>
   <div v-if="stats">
     <small>Aspectos positivos, negativos y neutros del boletín:</small>
-    <div class="h-auto">
+    <div class="h-auto py-5">
       <Pie :data :options />
     </div>
   </div>
@@ -63,7 +63,7 @@ const options: ChartOptions<'pie'> = {
           size: 10,
         },
       },
-      position: 'left',
+      position: 'top',
     },
   },
 };

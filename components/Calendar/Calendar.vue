@@ -1,5 +1,5 @@
 <template>
-  <div class="h-[410px]">
+  <div class="flex min-h-[410px] flex-col gap-5">
     <CalendarFilters
       v-model:selected-month-model="selectedMonth"
       v-model:selected-year-model="selectedYear" />

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col gap-5">
-    <header class="flex items-center justify-between gap-5 pt-5">
-      <div class="flex gap-5">
+    <header class="flex flex-wrap items-center justify-between gap-5 pt-5">
+      <div class="flex flex-wrap gap-5">
         <UButton
           color="secondary"
           variant="soft"
@@ -16,6 +16,7 @@
           variant="soft"
           class="border border-green-500/50"
           icon="i-heroicons-arrow-down-tray"
+          disabled
           @click="downloadPDF">
           Descargar PDF
         </UButton>
@@ -44,11 +45,11 @@
       </div>
       <div
         v-if="wordsCount"
-        class="rounded-lg border border-cyan-500/50 bg-blue-950 p-1 px-5 text-right text-cyan-200">
+        class="h-auto rounded-lg border border-cyan-500/50 bg-blue-950 p-1 px-5 text-right text-cyan-200">
         <p>El documento contiene aproximadamente {{ wordsCount }} palabras.</p>
       </div>
     </header>
-    <div class="Home__wrapper">
+    <div class="Home__wrapper" v-if="!showJSON">
       <section class="Home__calendar">
         <article class="h-full">
           <Card class="Home__calendar--card" title="Calendario">
@@ -94,8 +95,8 @@
         </article>
       </section>
       <section class="Home__mainPoints">
-        <article>
-          <Card title="Puntos clave del boletín">
+        <article class="h-full">
+          <Card class="Home__mainPoints--card" title="Puntos clave del boletín">
             <BoeMainPoints
               :main-points
               :is-loading-main-points="isLoadingMainPoints" />
@@ -103,22 +104,22 @@
         </article>
       </section>
       <section class="Home__keywords">
-        <article>
-          <Card title="Palabras clave">
+        <article class="h-full">
+          <Card class="Home__keywords--card" title="Palabras clave">
             <BoeKeywords :keywords :is-loading-keywords="isLoadingKeywords" />
           </Card>
         </article>
       </section>
       <section class="Home__areas">
-        <article>
-          <Card title="Áreas">
+        <article class="h-full">
+          <Card class="Home__areas--card" title="Áreas">
             <BoeAreas :areas :is-loading-areas="isLoadingAreas" />
           </Card>
         </article>
       </section>
       <section class="Home__aspects Home__aspects--positive">
-        <article>
-          <Card title="Aspectos positivos">
+        <article class="h-full">
+          <Card class="Home__aspects--card" title="Aspectos positivos">
             <BoeAspects
               type="positive"
               :aspects="positiveAspects"
@@ -127,8 +128,8 @@
         </article>
       </section>
       <section class="Home__aspects Home__aspects--negative">
-        <article>
-          <Card title="Aspectos negativos">
+        <article class="h-full">
+          <Card class="Home__aspects--card" title="Aspectos negativos">
             <BoeAspects
               type="negative"
               :aspects="negativeAspects"
@@ -137,8 +138,8 @@
         </article>
       </section>
       <section class="Home__aspects Home__aspects--neutral">
-        <article>
-          <Card title="Aspectos neutros">
+        <article class="h-full">
+          <Card class="Home__aspects--card" title="Aspectos neutros">
             <BoeAspects
               type="neutral"
               :aspects="neutralAspects"
@@ -146,6 +147,25 @@
           </Card>
         </article>
       </section>
+    </div>
+    <div v-else class="relative">
+      <pre class="rounded-2xl bg-dark-950/40 p-5 text-green-500">{{
+        boeAnalysisJSON
+      }}</pre>
+      <!-- Button to copy JSON to clipboard -->
+      <div
+        class="absolute right-10 top-5 flex w-[80px] flex-col items-center gap-2">
+        <UButton
+          color="green"
+          variant="soft"
+          icon="i-heroicons-clipboard-document-list"
+          @click="copyToClipboard(boeAnalysisJSON)" />
+        <div
+          class="rounded-full bg-dark-950/50 px-2 py-1 text-center"
+          v-if="showCopiedText">
+          <small class="text-green-500">Copiado!</small>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -181,6 +201,8 @@ const isLoadingKeywords = ref(true);
 const isLoadingAreas = ref(true);
 const isLoadingAspects = ref(true);
 
+const showCopiedText = ref(false);
+
 const summary = ref<string>('');
 const mainPoints = ref<string[]>([]);
 const keywords = ref<string[]>([]);
@@ -215,6 +237,19 @@ const neutralAspects = computed(() =>
   aspects.value?.filter(({ type }) => type === 'neutral'),
 );
 
+const boeAnalysisJSON = computed(() =>
+  JSON.stringify(
+    {
+      'puntos principales': mainPoints.value,
+      'palabras clave': keywords.value,
+      'áreas afectadas': areas.value,
+      'aspectos a destacar': aspects.value,
+    },
+    null,
+    2,
+  ),
+);
+
 const currentBoeDate = getFormattedStringDate('es', {
   weekday: 'long',
   day: 'numeric',
@@ -239,6 +274,15 @@ const scrapBoe = async () => {
   }
 };
 
+const copyToClipboard = (text: string) => {
+  navigator.clipboard.writeText(text);
+  showCopiedText.value = true;
+
+  setTimeout(() => {
+    showCopiedText.value = false;
+  }, 2000);
+};
+
 const generateSummary = async () => {
   if (!scrapData.value) {
     return;
@@ -256,13 +300,13 @@ const generateSummary = async () => {
   }
 };
 
-const generateMainPoints = async () => {
+const generateMainPoints = async (): Promise<MainPoint[] | undefined> => {
   if (mainPoints.value.length || !scrapData.value) {
-    return;
+    return undefined;
   }
 
   try {
-    return await $fetch<string[]>(`/api/openai/main-points`, {
+    return await $fetch<MainPoint[]>(`/api/openai/main-points`, {
       method: 'POST',
       body: {
         text: scrapData.value?.text ?? '',
@@ -273,13 +317,13 @@ const generateMainPoints = async () => {
   }
 };
 
-const generateKeywords = async () => {
+const generateKeywords = async (): Promise<Keyword[] | undefined> => {
   if (keywords.value.length || !scrapData.value) {
-    return;
+    return undefined;
   }
 
   try {
-    return await $fetch<string[]>(`/api/openai/keywords`, {
+    return await $fetch<Keyword[]>(`/api/openai/keywords`, {
       method: 'POST',
       body: {
         text: scrapData.value?.text ?? '',
@@ -290,9 +334,9 @@ const generateKeywords = async () => {
   }
 };
 
-const generateAreas = async () => {
+const generateAreas = async (): Promise<Area[] | undefined> => {
   if (areas.value.length || !scrapData.value) {
-    return;
+    return undefined;
   }
 
   try {
@@ -307,9 +351,9 @@ const generateAreas = async () => {
   }
 };
 
-const generateAspects = async () => {
+const generateAspects = async (): Promise<Aspect[] | undefined> => {
   if (aspects.value.length || !scrapData.value) {
-    return;
+    return undefined;
   }
 
   try {
@@ -359,10 +403,14 @@ const postAspects = async (_aspects: Aspect[]) => {
     return;
   }
 
-  aspects.value = _aspects;
+  aspects.value = _aspects.map(({ aspect, type, description }) => ({
+    aspect,
+    type,
+    description,
+  }));
 };
 
-const postKeywords = async (_keywords: string[]) => {
+const postKeywords = async (_keywords: Keyword[]) => {
   const { error } = await client
     .from('keywords')
     .insert(
@@ -395,10 +443,13 @@ const postAreas = async (_areas: Area[]) => {
     return;
   }
 
-  areas.value = _areas;
+  areas.value = _areas.map(({ name, description }) => ({
+    name,
+    description,
+  }));
 };
 
-const postMainPoints = async (_mainPoints: string[]) => {
+const postMainPoints = async (_mainPoints: MainPoint[]) => {
   const { error } = await client.from('main_points').insert(
     _mainPoints.map(({ point }) => ({
       boe_id: boeId.value,
@@ -444,10 +495,19 @@ const getBoeData = async () => {
       // Else, we set the data from the database
       boeId.value = boeData?.id ?? null;
       summary.value = boeData?.summary ?? '';
-      aspects.value = boeData?.aspects ?? [];
+      aspects.value =
+        boeData?.aspects.map(({ aspect, type, description }) => ({
+          aspect,
+          type,
+          description,
+        })) ?? [];
       mainPoints.value = boeData?.main_points.map(({ point }) => point) ?? [];
       keywords.value = boeData?.keywords.map(({ keyword }) => keyword) ?? [];
-      areas.value = boeData?.areas ?? [];
+      areas.value =
+        boeData?.areas.map(({ name, description }) => ({
+          name,
+          description,
+        })) ?? [];
 
       isLoadingSummary.value = false;
       isLoadingMainPoints.value = false;
@@ -458,25 +518,33 @@ const getBoeData = async () => {
 
     if (!aspects.value.length) {
       const aspects = await generateAspects();
-      await postAspects(aspects as Aspect[]);
+      if (!aspects) return;
+
+      await postAspects(aspects);
       isLoadingAspects.value = false;
     }
 
     if (!mainPoints.value.length) {
       const mainPoints = await generateMainPoints();
-      await postMainPoints(mainPoints as string[]);
+      if (!mainPoints) return;
+
+      await postMainPoints(mainPoints);
       isLoadingMainPoints.value = false;
     }
 
     if (!keywords.value.length) {
       const keywords = await generateKeywords();
-      await postKeywords(keywords as string[]);
+      if (!keywords) return;
+
+      await postKeywords(keywords);
       isLoadingKeywords.value = false;
     }
 
     if (!areas.value.length) {
       const areas = await generateAreas();
-      await postAreas(areas as Area[]);
+      if (!areas) return;
+
+      await postAreas(areas);
       isLoadingAreas.value = false;
     }
   } catch (e) {
@@ -504,42 +572,58 @@ onMounted(async () => {
   }
 
   &__calendar {
-    @apply col-span-12 xl:col-span-6 2xl:col-span-3;
+    @apply col-span-12 xl:col-span-6 2xl:col-span-4;
 
     &--card {
-      @apply h-full;
+      @apply min-h-[400px];
     }
   }
 
   &__summary {
-    @apply col-span-4 xl:col-span-6 2xl:col-span-5;
+    @apply col-span-12 md:col-span-6 2xl:col-span-5;
 
     &--card {
-      @apply h-full;
+      @apply h-full min-h-[400px];
     }
   }
 
   &__stats {
-    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
+    @apply col-span-12 md:col-span-6 2xl:col-span-3;
 
     &--card {
-      @apply h-full;
+      @apply h-full min-h-[400px];
     }
   }
 
   &__mainPoints {
-    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
+    @apply col-span-12 md:col-span-6 2xl:col-span-4;
+
+    &--card {
+      @apply h-full min-h-[400px];
+    }
   }
 
   &__keywords {
-    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
+    @apply col-span-12 md:col-span-6 2xl:col-span-4;
+
+    &--card {
+      @apply h-full min-h-[400px];
+    }
   }
 
   &__areas {
-    @apply col-span-4 xl:col-span-6 2xl:col-span-4;
+    @apply col-span-12 md:col-span-6 2xl:col-span-4;
+
+    &--card {
+      @apply h-full min-h-[400px];
+    }
   }
 
   &__aspects {
+    &--card {
+      @apply h-full min-h-[400px];
+    }
+
     &--positive {
       @apply col-span-12 2xl:col-span-4;
     }

@@ -37,15 +37,15 @@ defineProps<AreasProps>();
     }
 
     .BoeAnalytics__area-item-card {
-      @apply flex h-full flex-col gap-5 rounded-2xl border border-dark-500/50 bg-dark-950/40;
+      @apply flex h-full flex-col gap-5 rounded border border-dark-500/50 bg-dark-950/40 p-5;
     }
 
     .BoeAnalytics__area-item--title {
-      @apply min-h-[76px] p-2.5 text-center text-xl font-bold text-primary-500;
+      @apply text-center text-xl font-bold text-primary-500;
     }
 
     .BoeAnalytics__area-item--description {
-      @apply px-5 pb-5 text-justify text-sm;
+      @apply text-center text-sm;
     }
   }
 }

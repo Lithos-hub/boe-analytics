@@ -1,13 +1,13 @@
 <template>
-  <div class="grid h-full w-full grid-cols-12 items-center gap-1">
+  <div class="grid h-full min-h-[400px] w-full grid-cols-12 items-center gap-1">
     <!-- Chevron left to go to previous month -->
-    <div class="relative col-span-1 h-full w-full">
+    <div
+      class="relative col-span-1 flex h-full w-full flex-col items-center justify-center">
       <UButton
         icon="i-heroicons-chevron-left"
         color="dark"
         variant="soft"
-        size="xs"
-        class="absolute top-1/2 w-full -translate-y-1/2 border border-dark-500/50"
+        class="border border-dark-500/50"
         :disabled="isYearLessThan1960(selectedYear - 1) && selectedMonth === 1"
         @click="goToPreviousMonth" />
     </div>
@@ -69,13 +69,13 @@
         class="CalendarGrid__cell CalendarGrid__empty-cell" />
     </div>
     <!-- Chevron right to go to next month -->
-    <div class="relative col-span-1 h-full w-full">
+    <div
+      class="relative col-span-1 flex h-full w-full flex-col items-center justify-center">
       <UButton
         icon="i-heroicons-chevron-right"
         color="dark"
         variant="soft"
-        size="xs"
-        class="absolute top-1/2 w-full -translate-y-1/2 border border-dark-500/50"
+        class="border border-dark-500/50"
         :disabled="isFutureDate(selectedYear, selectedMonth + 1, 1)"
         @click="goToNextMonth" />
     </div>
