@@ -409,6 +409,7 @@ const postBoe = async (_summary: string) => {
       url: scrapData.value?.url ?? '',
       summary: _summary,
     })
+    .select()
     .single<Boe>();
 
   if (error) {
@@ -422,6 +423,10 @@ const postBoe = async (_summary: string) => {
 };
 
 const postAspects = async (_aspects: Aspect[]) => {
+  if (!boeId.value) {
+    throw new Error('BOE ID is mandatory');
+  }
+
   const { error } = await client.from('aspects').insert(
     _aspects.map(({ aspect, type, description }) => ({
       boe_id: boeId.value,
@@ -444,6 +449,10 @@ const postAspects = async (_aspects: Aspect[]) => {
 };
 
 const postKeywords = async (_keywords: Keyword[]) => {
+  if (!boeId.value) {
+    throw new Error('BOE ID is mandatory');
+  }
+
   const { error } = await client.from('keywords').insert(
     _keywords.map(({ keyword }) => ({
       boe_id: boeId.value,
@@ -460,6 +469,10 @@ const postKeywords = async (_keywords: Keyword[]) => {
 };
 
 const postAreas = async (_areas: Area[]) => {
+  if (!boeId.value) {
+    throw new Error('BOE ID is mandatory');
+  }
+
   const { error } = await client.from('areas').insert(
     _areas.map(({ name, description }) => ({
       boe_id: boeId.value,
@@ -480,6 +493,9 @@ const postAreas = async (_areas: Area[]) => {
 };
 
 const postMainPoints = async (_mainPoints: MainPoint[]) => {
+  if (!boeId.value) {
+    throw new Error('BOE ID is mandatory');
+  }
   const { error } = await client.from('main_points').insert(
     _mainPoints.map(({ point }) => ({
       boe_id: boeId.value,
@@ -503,6 +519,9 @@ const getBoeData = async () => {
   isLoadingAspects.value = true;
 
   try {
+    // We scrap the BOE (always, and only once)
+    await scrapBoe();
+
     // We get the BOE from the database
     const { data: boeData } = await client
       .from('boes')
@@ -554,11 +573,8 @@ const getBoeData = async () => {
       isLoadingSummary.value = false;
     }
 
-    // We scrap the BOE (always, and only once)
-    await scrapBoe();
-
     // If the BOE doesn't exist, we generate and create the summary and post the BOE
-    if (!boeData) {
+    if (!boeData || !boeData?.summary) {
       const summary = await generateSummary();
       await postBoe(summary as string);
       isLoadingSummary.value = false;
