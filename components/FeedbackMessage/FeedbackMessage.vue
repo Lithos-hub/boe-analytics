@@ -25,5 +25,9 @@ defineProps<FeedbackMessageProps>();
   &--info {
     @apply border border-cyan-500/50 bg-blue-950/40 text-cyan-200;
   }
+
+  &--warning {
+    @apply border border-amber-500/50 bg-amber-950/40 text-amber-200;
+  }
 }
 </style>
