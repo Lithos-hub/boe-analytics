@@ -3,17 +3,17 @@
     <nav
       class="border-primary/10 flex h-14 items-center justify-between border-b px-5">
       <div class="flex items-center gap-5">
-        <NuxtLink to="/" class="flex gap-2.5">
+        <NuxtLink :to="`/${dateRaw}`" class="flex gap-2.5">
           <img src="/logo.svg" width="25" class="Navbar__logo-icon" />
           <span class="Navbar__logo-text">BOE Analytics</span>
         </NuxtLink>
       </div>
       <div class="flex gap-5">
         <ULink
-          to="/"
+          :to="`/${dateRaw}`"
           active-class="text-primary font-bold underline underline-offset-4"
           inactive-class="text-gray-500">
-          Inicio
+          Análisis
         </ULink>
         <ULink
           to="/about"
@@ -25,6 +25,12 @@
     </nav>
   </header>
 </template>
+
+<script setup lang="ts">
+import { getCurrentDate } from '@/utils/dates';
+
+const { dateRaw } = getCurrentDate();
+</script>
 
 <style lang="scss" scoped>
 .Navbar {
