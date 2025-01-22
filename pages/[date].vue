@@ -183,6 +183,13 @@ interface Stats {
   neutral: number;
 }
 
+interface GenerateTask {
+  condition: boolean;
+  generate: () => Promise<any>;
+  post: (data: any) => Promise<void>;
+  loadingState: () => void;
+}
+
 // Consts
 const client = useSupabaseClient<Database>();
 
@@ -511,119 +518,137 @@ const postMainPoints = async (_mainPoints: MainPoint[]) => {
   mainPoints.value = _mainPoints.map(({ point }) => point);
 };
 
-const getBoeData = async () => {
+const initializeLoadingStates = () => {
   isLoadingSummary.value = true;
   isLoadingMainPoints.value = true;
   isLoadingKeywords.value = true;
   isLoadingAreas.value = true;
   isLoadingAspects.value = true;
+};
 
+const resetLoadingStates = () => {
+  isLoadingSummary.value = false;
+  isLoadingMainPoints.value = false;
+  isLoadingKeywords.value = false;
+  isLoadingAreas.value = false;
+  isLoadingAspects.value = false;
+};
+
+const setBoeData = (boeData: BoeResponse) => {
+  const dataMappers = {
+    basic: () => {
+      if (boeData?.id && boeData?.url) {
+        boeId.value = boeData.id;
+        boeUrl.value = boeData.url;
+      }
+    },
+    areas: () => {
+      if (boeData?.areas?.length) {
+        areas.value = boeData.areas.map(({ name, description }) => ({
+          name,
+          description,
+        }));
+        isLoadingAreas.value = false;
+      }
+    },
+    mainPoints: () => {
+      if (boeData?.main_points?.length) {
+        mainPoints.value = boeData.main_points.map(({ point }) => point);
+        isLoadingMainPoints.value = false;
+      }
+    },
+    keywords: () => {
+      if (boeData?.keywords?.length) {
+        keywords.value = boeData.keywords.map(({ keyword }) => keyword);
+        isLoadingKeywords.value = false;
+      }
+    },
+    aspects: () => {
+      if (boeData?.aspects?.length) {
+        aspects.value = boeData.aspects.map(
+          ({ aspect, type, description }) => ({
+            aspect,
+            type,
+            description,
+          }),
+        );
+        isLoadingAspects.value = false;
+      }
+    },
+    summary: () => {
+      if (boeData?.summary) {
+        summary.value = boeData.summary;
+        isLoadingSummary.value = false;
+      }
+    },
+  };
+
+  Object.values(dataMappers).forEach((mapper) => mapper());
+};
+
+const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
+  if (!boeData || !boeData?.summary) {
+    const summaryData = await generateSummary();
+    await postBoe(summaryData as string);
+    isLoadingSummary.value = false;
+    await getAllBoes();
+  }
+
+  const generateTasks: GenerateTask[] = [
+    {
+      condition: !aspects.value.length,
+      generate: generateAspects,
+      post: postAspects,
+      loadingState: () => (isLoadingAspects.value = false),
+    },
+    {
+      condition: !mainPoints.value.length,
+      generate: generateMainPoints,
+      post: postMainPoints,
+      loadingState: () => (isLoadingMainPoints.value = false),
+    },
+    {
+      condition: !keywords.value.length,
+      generate: generateKeywords,
+      post: postKeywords,
+      loadingState: () => (isLoadingKeywords.value = false),
+    },
+    {
+      condition: !areas.value.length,
+      generate: generateAreas,
+      post: postAreas,
+      loadingState: () => (isLoadingAreas.value = false),
+    },
+  ];
+
+  for (const task of generateTasks) {
+    if (task.condition) {
+      const data = await task.generate();
+      if (data) {
+        await task.post(data);
+        task.loadingState();
+      }
+    }
+  }
+};
+
+const getBoeData = async () => {
   try {
-    // We scrap the BOE (always, and only once)
+    initializeLoadingStates();
     await scrapBoe();
 
-    // We get the BOE from the database
     const { data: boeData } = await client
       .from('boes')
       .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
       .eq('date', route.params.date)
       .single<BoeResponse>();
 
-    // If the BOE exists, we set the id and url
-    if (boeData?.id && boeData?.url) {
-      boeId.value = boeData.id;
-      boeUrl.value = boeData.url;
-    }
-
-    // If the areas exist, we set them
-    if (boeData?.areas.length) {
-      areas.value =
-        boeData?.areas.map(({ name, description }) => ({
-          name,
-          description,
-        })) ?? [];
-      isLoadingAreas.value = false;
-    }
-
-    if (boeData?.main_points.length) {
-      mainPoints.value = boeData?.main_points.map(({ point }) => point) ?? [];
-      isLoadingMainPoints.value = false;
-    }
-
-    // If the keywords exist, we set them
-    if (boeData?.keywords.length) {
-      keywords.value = boeData?.keywords.map(({ keyword }) => keyword) ?? [];
-      isLoadingKeywords.value = false;
-    }
-
-    // If the aspects exist, we set them
-    if (boeData?.aspects.length) {
-      aspects.value =
-        boeData?.aspects.map(({ aspect, type, description }) => ({
-          aspect,
-          type,
-          description,
-        })) ?? [];
-      isLoadingAspects.value = false;
-    }
-
-    // If the summary exists, we set it
-    if (boeData?.summary) {
-      summary.value = boeData?.summary ?? '';
-      isLoadingSummary.value = false;
-    }
-
-    // If the BOE doesn't exist, we generate and create the summary and post the BOE
-    if (!boeData || !boeData?.summary) {
-      const summary = await generateSummary();
-      await postBoe(summary as string);
-      isLoadingSummary.value = false;
-      await getAllBoes();
-    }
-
-    // If the aspects don't exist, we generate and post them
-    if (!aspects.value.length) {
-      const aspects = await generateAspects();
-      if (!aspects) return;
-
-      await postAspects(aspects);
-      isLoadingAspects.value = false;
-    }
-
-    // If the main points don't exist, we generate and post them
-    if (!mainPoints.value.length) {
-      const mainPoints = await generateMainPoints();
-      if (!mainPoints) return;
-
-      await postMainPoints(mainPoints);
-      isLoadingMainPoints.value = false;
-    }
-
-    // If the keywords don't exist, we generate and post them
-    if (!keywords.value.length) {
-      const keywords = await generateKeywords();
-      if (!keywords) return;
-
-      await postKeywords(keywords);
-      isLoadingKeywords.value = false;
-    }
-
-    // If the areas don't exist, we generate and post them
-    if (!areas.value.length) {
-      const areas = await generateAreas();
-      if (!areas) return;
-
-      await postAreas(areas);
-      isLoadingAreas.value = false;
-    }
+    if (boeData) setBoeData(boeData);
+    await generateAndPostMissingData(boeData);
   } catch (error) {
     console.error('Error in getBoeData:', error);
   } finally {
-    isLoadingSummary.value = false;
-    isLoadingMainPoints.value = false;
-    isLoadingKeywords.value = false;
-    isLoadingAreas.value = false;
-    isLoadingAspects.value = false;
+    resetLoadingStates();
   }
 };
 
