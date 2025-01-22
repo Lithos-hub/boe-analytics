@@ -1,7 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+import { getCurrentDate } from './utils/dates';
+
 export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@nuxt/eslint', '@nuxtjs/supabase'],
   devtools: { enabled: true },
+  // When the user is on the home page, must be redirected to /:current-date route
+  routeRules: {
+    '/': {
+      redirect: `/${getCurrentDate().dateRaw}`,
+    },
+  },
   app: {
     head: {
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],

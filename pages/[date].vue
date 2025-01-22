@@ -1,7 +1,8 @@
 <template>
   <div class="flex flex-col gap-5">
-    <header class="flex flex-wrap items-center justify-between gap-5 pt-5">
-      <div class="flex flex-wrap gap-5">
+    <header class="grid grid-cols-12 items-center justify-center gap-5">
+      <div
+        class="col-span-12 flex flex-wrap items-center justify-center gap-1 xl:col-span-4">
         <UButton
           color="secondary"
           variant="soft"
@@ -43,27 +44,31 @@
           {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
         </UButton>
       </div>
-      <FeedbackMessage
-        v-if="wordsCount"
-        :message="`El documento contiene aproximadamente ${wordsCount} palabras.`"
-        type="info" />
+      <div class="col-span-12 text-center xl:col-span-4">
+        <h1 class="text-white">BOE del {{ formattedDate }}</h1>
+      </div>
+      <div class="relative col-span-12 mx-auto md:ml-auto xl:col-span-4">
+        <FeedbackMessage
+          v-if="wordsCount && !isLoadingScrap"
+          :message="`El documento contiene aproximadamente ${wordsCount} palabras.`"
+          type="info" />
+        <Loader v-else-if="isLoadingScrap" />
+      </div>
     </header>
     <div class="Home__wrapper" v-if="!showJSON">
       <section class="Home__calendar">
-        <article class="h-full">
+        <article>
           <Card class="Home__calendar--card" title="Calendario">
             <Calendar />
           </Card>
         </article>
       </section>
       <section class="Home__summary">
-        <article class="h-full">
+        <article>
           <Card class="Home__summary--card" title="Resumen">
             <BoeSummary
               v-if="!isLoadingSummary"
               :text="summary ?? ''"
-              :boe-date-raw="dateRaw"
-              :boe-date="currentBoeDate"
               :boe-link="boeUrl ?? ''" />
             <Loader
               v-else
@@ -78,7 +83,7 @@
         </article>
       </section>
       <section class="Home__stats">
-        <article class="h-full">
+        <article>
           <Card class="Home__stats--card" title="Estadísticas">
             <BoeStats v-if="!isLoadingAspects" :stats />
             <Loader
@@ -94,7 +99,7 @@
         </article>
       </section>
       <section class="Home__mainPoints">
-        <article class="h-full">
+        <article>
           <Card class="Home__mainPoints--card" title="Puntos clave del boletín">
             <BoeMainPoints
               :main-points
@@ -103,21 +108,21 @@
         </article>
       </section>
       <section class="Home__keywords">
-        <article class="h-full">
+        <article>
           <Card class="Home__keywords--card" title="Palabras clave">
             <BoeKeywords :keywords :is-loading-keywords="isLoadingKeywords" />
           </Card>
         </article>
       </section>
       <section class="Home__areas">
-        <article class="h-full">
+        <article>
           <Card class="Home__areas--card" title="Áreas">
             <BoeAreas :areas :is-loading-areas="isLoadingAreas" />
           </Card>
         </article>
       </section>
       <section class="Home__aspects Home__aspects--positive">
-        <article class="h-full">
+        <article>
           <Card class="Home__aspects--card" title="Aspectos positivos">
             <BoeAspects
               type="positive"
@@ -127,7 +132,7 @@
         </article>
       </section>
       <section class="Home__aspects Home__aspects--negative">
-        <article class="h-full">
+        <article>
           <Card class="Home__aspects--card" title="Aspectos negativos">
             <BoeAspects
               type="negative"
@@ -137,7 +142,7 @@
         </article>
       </section>
       <section class="Home__aspects Home__aspects--neutral">
-        <article class="h-full">
+        <article>
           <Card class="Home__aspects--card" title="Aspectos neutros">
             <BoeAspects
               type="neutral"
@@ -185,7 +190,12 @@ interface Stats {
   neutral: number;
 }
 
+// Consts
 const client = useSupabaseClient();
+
+const route = useRoute();
+
+const formattedDate = formatDateToLocaleString(route.params.date as string);
 
 // State
 const scrapData = ref<ScrapResponse | null>(null);
@@ -194,6 +204,7 @@ const boeId = ref<number | null>(null);
 
 const showJSON = ref(false);
 
+const isLoadingScrap = ref(true);
 const isLoadingSummary = ref(true);
 const isLoadingMainPoints = ref(true);
 const isLoadingKeywords = ref(true);
@@ -249,15 +260,6 @@ const boeAnalysisJSON = computed(() =>
   ),
 );
 
-const currentBoeDate = getFormattedStringDate('es', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
-
-const { dateRaw } = getCurrentDate();
-
 // Methods
 const downloadPDF = () => {
   console.log('downloadPDF');
@@ -265,12 +267,17 @@ const downloadPDF = () => {
 
 const scrapBoe = async () => {
   try {
-    const response = await $fetch<ScrapResponse>(`/api/scrap/${dateRaw}`);
+    const response = await $fetch<ScrapResponse>(
+      `/api/scrap/${route.params.date}`,
+    );
     scrapData.value = response;
     boeUrl.value = response?.url ?? '';
+    isLoadingScrap.value = false;
   } catch (error) {
     console.error('Error scraping BOE data:', error);
     throw error;
+  } finally {
+    isLoadingScrap.value = false;
   }
 };
 
@@ -373,7 +380,7 @@ const postBoe = async (_summary: string) => {
   const { data, error } = await client
     .from('boes')
     .insert({
-      date: dateRaw,
+      date: route.params.date,
       url: scrapData.value?.url ?? '',
       summary: _summary,
     })
@@ -475,11 +482,11 @@ const getBoeData = async () => {
     const { data: boeData } = await client
       .from('boes')
       .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
-      .eq('date', dateRaw)
+      .eq('date', route.params.date)
       .single<BoeResponse>();
 
     // If the BOE exists, we set the id and url
-    if (boeData) {
+    if (boeData?.id && boeData?.url) {
       boeId.value = boeData.id;
       boeUrl.value = boeData.url;
     }
@@ -528,8 +535,8 @@ const getBoeData = async () => {
     // If the BOE doesn't exist, we generate and create the summary and post the BOE
     if (!boeData) {
       const summary = await generateSummary();
-      isLoadingSummary.value = false;
       await postBoe(summary as string);
+      isLoadingSummary.value = false;
     }
 
     // If the aspects don't exist, we generate and post them
