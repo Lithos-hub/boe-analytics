@@ -179,10 +179,12 @@ import type { ScrapResponse } from '@/server/api/scrap/scrap.interfaces';
 import type {
   Area,
   Aspect,
+  Boe,
   BoeResponse,
   Keyword,
   MainPoint,
 } from '~/models/boe';
+import type { Database } from '~/types/supabase';
 
 interface Stats {
   positive: number;
@@ -191,7 +193,7 @@ interface Stats {
 }
 
 // Consts
-const client = useSupabaseClient();
+const client = useSupabaseClient<Database>();
 
 const route = useRoute();
 
@@ -380,18 +382,18 @@ const postBoe = async (_summary: string) => {
   const { data, error } = await client
     .from('boes')
     .insert({
-      date: route.params.date,
+      date: route.params.date as string,
       url: scrapData.value?.url ?? '',
       summary: _summary,
     })
-    .single<BoeResponse>();
+    .single<Boe>();
 
   if (error) {
     console.error('Error creating BOE:', error);
     throw error;
   }
 
-  boeId.value = data.id;
+  boeId.value = data?.id ?? null;
   boeUrl.value = scrapData.value?.url ?? '';
   summary.value = _summary;
 };
