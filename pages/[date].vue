@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-5">
     <header class="grid grid-cols-12 items-center justify-center gap-5">
       <div
-        class="col-span-12 flex flex-wrap items-center justify-center gap-1 xl:col-span-4">
+        class="col-span-12 flex flex-wrap items-center justify-center gap-1 xl:col-span-4 xl:justify-start">
         <UButton
           color="secondary"
           variant="soft"
@@ -21,16 +21,6 @@
           @click="downloadPDF">
           Descargar PDF
         </UButton>
-        <!-- Analyze again -->
-        <!-- <UButton
-            color="primary"
-            variant="soft"
-            class="border border-primary-500/50"
-            icon="i-heroicons-arrow-path"
-            @click="fetchAnalytics">
-            Analizar de nuevo
-          </UButton> -->
-        <!-- Show JSON || Show Analysis -->
         <UButton
           color="dark"
           variant="soft"
@@ -45,7 +35,7 @@
         </UButton>
       </div>
       <div class="col-span-12 text-center xl:col-span-4">
-        <h1 class="text-white">BOE del {{ formattedDate }}</h1>
+        <h2 class="text-white">BOE del {{ formattedDate }}</h2>
       </div>
       <div class="relative col-span-12 mx-auto md:ml-auto xl:col-span-4">
         <FeedbackMessage
@@ -59,7 +49,7 @@
       <section class="Home__calendar">
         <article>
           <Card class="Home__calendar--card" title="Calendario">
-            <Calendar />
+            <Calendar :boes-list="boesList" />
           </Card>
         </article>
       </section>
@@ -221,6 +211,8 @@ const keywords = ref<string[]>([]);
 const areas = ref<Area[]>([]);
 const aspects = ref<Aspect[]>([]);
 
+const boesList = ref<{ date: string }[]>([]);
+
 // Computed
 const wordsCount = computed(
   () => scrapData.value?.text?.split(' ').length ?? 0,
@@ -263,8 +255,18 @@ const boeAnalysisJSON = computed(() =>
 );
 
 // Methods
+
 const downloadPDF = () => {
   console.log('downloadPDF');
+};
+
+const getAllBoes = async () => {
+  const { data, error } = await client.from('boes').select('date');
+  if (error) {
+    console.error('Error getting all BOEs:', error);
+    return;
+  }
+  boesList.value = data;
 };
 
 const scrapBoe = async () => {
@@ -539,6 +541,7 @@ const getBoeData = async () => {
       const summary = await generateSummary();
       await postBoe(summary as string);
       isLoadingSummary.value = false;
+      await getAllBoes();
     }
 
     // If the aspects don't exist, we generate and post them
@@ -588,6 +591,7 @@ const getBoeData = async () => {
 };
 
 onMounted(async () => {
+  await getAllBoes();
   await getBoeData();
 });
 </script>
