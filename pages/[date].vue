@@ -158,7 +158,7 @@
         <div
           class="rounded-full bg-dark-950/50 px-2 py-1 text-center"
           v-if="showCopiedText">
-          <small class="text-green-500">Copiado!</small>
+          <small class="text-green-500">¡Copiado!</small>
         </div>
       </div>
     </div>
