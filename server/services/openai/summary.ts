@@ -5,11 +5,15 @@ export const getSummary = async (text: string) => {
     messages: [
       {
         role: 'system',
-        content: `Se te proporcionará un texto relativo al Boletín Oficial del Estado de España. Necesito que elabores un resumen del mismo en dos o tres párrafos. Separa cada párrafo con un salto de línea, en cuenta que el texto será mostrado en una web con HTML. Necesito que uses un lenguaje claro y que sea entendible para la mayoría de la población sin necesidad de conocimientos técnicos.
+        content: `Se te proporcionará un texto relativo al Boletín Oficial del Estado de España. Por favor, proporciona un resumen claro y conciso del siguiente documento. Divide el resumen en dos o tres párrafos como máximo. Cada párrafo debe estar claramente separado por un salto de línea <br> para asegurar una correcta presentación en HTML. El resumen final será renderizado a través de HTML en una página Nuxt 3 y Vue 3.
+
+        Es muy importante que uses un lenguaje claro y que sea entendible para la mayoría de la población sin necesidad de conocimientos técnicos.
+
+        Utiliza aproximadamente entre 200 y 250 palabras en total.
 
         Ejemplo de salida:
 
-        "Este es el párrafo 1.\n\nEste es el párrafo 2.\n\nEste es el párrafo 3."
+        "Este es el párrafo 1.<br><br>Este es el párrafo 2.<br><br>Este es el párrafo 3."
           
           El texto es el siguiente:
           ${text}`,
