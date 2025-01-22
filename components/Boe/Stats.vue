@@ -22,18 +22,11 @@ import {
   type ChartOptions,
   type ChartData,
 } from 'chart.js';
+import type { StatsProps } from './Stats.interfaces';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-interface BoeStatsProps {
-  stats: {
-    positive: number;
-    negative: number;
-    neutral: number;
-  } | null;
-}
-
-const props = defineProps<BoeStatsProps>();
+const props = defineProps<StatsProps>();
 
 const data: ChartData<'pie'> = {
   labels: ['Positivo', 'Negativo', 'Neutral'],

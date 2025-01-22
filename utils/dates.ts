@@ -2,6 +2,15 @@ export const formatDate = (year: number, month: number, day: number) => {
   return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 };
 
+export const formatDateToLocaleString = (date: string) => {
+  return new Date(date).toLocaleDateString('es', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
 export const isFutureDate = (year: number, month: number, day: number) => {
   const today = new Date();
   const date = new Date(year, month - 1, day);
@@ -25,11 +34,4 @@ export const getCurrentDate = () => {
     month: new Date().getMonth() + 1,
     day: new Date().getDate(),
   };
-};
-
-export const getFormattedStringDate = (
-  lang: string,
-  options: Intl.DateTimeFormatOptions,
-) => {
-  return new Date().toLocaleDateString(lang, options);
 };

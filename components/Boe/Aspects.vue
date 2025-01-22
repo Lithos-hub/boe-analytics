@@ -23,9 +23,9 @@
 </template>
 
 <script setup lang="ts">
-import type { BoeAspectsProps } from './Aspects.interfaces';
+import type { AspectsProps } from './Aspects.interfaces';
 
-defineProps<BoeAspectsProps>();
+defineProps<AspectsProps>();
 
 const statusMessages = {
   positive: ['Generando aspectos positivos...'],

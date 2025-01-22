@@ -1,7 +1,5 @@
 <template>
   <div class="flex flex-col gap-5">
-    <strong class="text-primary-500">BOE publicado el {{ boeDate }}</strong>
-
     <div class="flex flex-col gap-5">
       <div v-if="text">
         <div v-html="text" class="text-justify" />
@@ -17,12 +15,6 @@
 </template>
 
 <script setup lang="ts">
-interface CurrentBoeProps {
-  text: string;
-  boeDateRaw: string;
-  boeDate: string;
-  boeLink: string;
-}
-
-defineProps<CurrentBoeProps>();
+import type { SummaryProps } from './Summary.interfaces';
+defineProps<SummaryProps>();
 </script>

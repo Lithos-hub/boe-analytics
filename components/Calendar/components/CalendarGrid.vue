@@ -25,7 +25,7 @@
         :key="day"
         class="CalendarGrid__cell CalendarGrid__empty-cell" />
 
-      <div
+      <NuxtLink
         v-for="day in monthDays.days"
         :key="day"
         :class="[
@@ -46,7 +46,7 @@
             ),
           },
         ]"
-        @click="handleDayClick(day)">
+        :to="`/${formatDate(selectedYear, selectedMonth, day)}`">
         <small class="absolute left-1 top-1 text-xs">
           {{ day }}
         </small>
@@ -58,10 +58,10 @@
                 formatDate(selectedYear, selectedMonth, day),
               )
             "
-            name="i-heroicons-check"
-            class="h-3 w-3 text-green-500" />
+            name="i-heroicons-document-check"
+            class="h-4 w-4 text-green-500" />
         </div>
-      </div>
+      </NuxtLink>
 
       <div
         v-for="day in monthDays.lastDay"
@@ -84,31 +84,16 @@
 
 <script setup lang="ts">
 import { weekDaysShort } from '@/components/Calendar/Calendar.const';
+import type { CalendarGridProps } from './CalendarGrid.interfaces';
 
-interface CalendarGridProps {
-  monthDays: {
-    days: number;
-    firstDay: number;
-    lastDay: number;
-  };
-  selectedMonth: number;
-  selectedYear: number;
-  selectedDate: string;
-  boesAvailableByDates: string[];
-}
+const { monthDays, boesAvailableByDates, selectedYear, selectedMonth } =
+  defineProps<CalendarGridProps>();
 
-const {
-  monthDays,
-  boesAvailableByDates,
-  selectedDate,
-  selectedYear,
-  selectedMonth,
-} = defineProps<CalendarGridProps>();
-const emits = defineEmits([
-  'set-previous-month',
-  'set-next-month',
-  'set-selected-date',
-]);
+const emits = defineEmits(['set-previous-month', 'set-next-month']);
+
+const route = useRoute();
+
+const selectedDate = route.params.date as string;
 
 const goToPreviousMonth = () => {
   emits('set-previous-month');
@@ -116,10 +101,6 @@ const goToPreviousMonth = () => {
 
 const goToNextMonth = () => {
   emits('set-next-month');
-};
-
-const handleDayClick = (day: number) => {
-  emits('set-selected-date', formatDate(selectedYear, selectedMonth, day));
 };
 </script>
 
@@ -149,7 +130,7 @@ const handleDayClick = (day: number) => {
     }
 
     &--selected {
-      @apply border-2 border-secondary-500/50 bg-secondary-500/20 text-secondary-200;
+      @apply border-2 border-cyan-500/50 bg-cyan-500/20 text-cyan-200;
     }
   }
 

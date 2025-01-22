@@ -1,27 +1,25 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-5">
     <div class="loader" />
-    <strong class="text-primary text-center">
-      {{ props.statusMessages[currentMessageIndex] }}
+    <strong class="text-primary text-center" v-if="statusMessages">
+      {{ statusMessages[currentMessageIndex] }}
     </strong>
   </div>
 </template>
 
 <script setup lang="ts">
-interface LoaderProps {
-  statusMessages: string[];
-}
+import type { LoaderProps } from './Loader.interfaces';
 
-const props = defineProps<LoaderProps>();
+const { statusMessages } = defineProps<LoaderProps>();
 
 const currentMessageIndex = ref(0);
 
 onMounted(() => {
   setInterval(() => {
     currentMessageIndex.value =
-      currentMessageIndex.value < props.statusMessages.length - 1
-        ? (currentMessageIndex.value + 1) % props.statusMessages.length
-        : props.statusMessages.length - 1;
+      currentMessageIndex.value < (statusMessages?.length ?? 0) - 1
+        ? (currentMessageIndex.value + 1) % (statusMessages?.length ?? 0)
+        : (statusMessages?.length ?? 0) - 1;
   }, 4000);
 });
 </script>

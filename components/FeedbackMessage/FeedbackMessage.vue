@@ -12,7 +12,7 @@ defineProps<FeedbackMessageProps>();
 
 <style lang="scss" scoped>
 .FeedbackMessage {
-  @apply rounded-lg bg-dark-950/40 p-2.5 text-sm;
+  @apply w-fit rounded-lg bg-dark-950/40 p-2.5 text-sm;
 
   &--success {
     @apply border border-green-500/50 bg-green-950/40 text-green-200;

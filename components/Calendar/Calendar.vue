@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-[410px] flex-col gap-5">
+  <div class="flex flex-col">
     <CalendarFilters
       v-model:selected-month-model="selectedMonth"
       v-model:selected-year-model="selectedYear" />
@@ -7,11 +7,9 @@
       :month-days="monthDays"
       :selected-month="selectedMonth"
       :selected-year="selectedYear"
-      :selected-date="selectedDate"
       :boes-available-by-dates="availableBoeListByDates"
       @set-previous-month="setPreviousMonth"
-      @set-next-month="setNextMonth"
-      @set-selected-date="setSelectedDate" />
+      @set-next-month="setNextMonth" />
   </div>
 </template>
 
@@ -21,10 +19,18 @@ import CalendarGrid from './components/CalendarGrid.vue';
 
 const client = useSupabaseClient();
 
-const selectedMonth = ref(new Date().getMonth() + 1);
-const selectedYear = ref(new Date().getFullYear());
-const selectedDate = ref('');
+const emits = defineEmits(['set-selected-date']);
 
+const route = useRoute();
+
+const dateParam = route.params.date as string;
+const month = dateParam.split('-')[1];
+const year = dateParam.split('-')[0];
+
+const selectedMonth = ref(Number(month));
+const selectedYear = ref(Number(year));
+
+const selectedDate = formatDateToLocaleString(dateParam);
 const boesList = ref<{ date: string }[]>([]);
 
 const availableBoeListByDates = computed(
@@ -72,10 +78,6 @@ const setNextMonth = () => {
   } else {
     selectedMonth.value++;
   }
-};
-
-const setSelectedDate = (date: string) => {
-  selectedDate.value = date;
 };
 
 const getAllBoes = async () => {
