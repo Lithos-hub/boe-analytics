@@ -39,9 +39,9 @@
       </div>
       <div class="relative col-span-12 mx-auto md:ml-auto xl:col-span-4">
         <FeedbackMessage
-          v-if="wordsCount && !isLoadingScrap"
-          :message="`El documento contiene aproximadamente ${wordsCount} palabras.`"
-          type="info" />
+          v-if="wordsCountAmountMessage && !isLoadingScrap"
+          :message="wordsCountAmountMessage"
+          :type="wordsCountAmountLevel" />
         <Loader v-else-if="isLoadingScrap" />
       </div>
     </header>
@@ -217,6 +217,26 @@ const boesList = ref<{ date: string }[]>([]);
 const wordsCount = computed(
   () => scrapData.value?.text?.split(' ').length ?? 0,
 );
+
+const wordsCountAmountLevel = computed(() => {
+  if (wordsCount.value < 1000) return 'info';
+  if (wordsCount.value >= 1000 && wordsCount.value < 15000) return 'warning';
+  if (wordsCount.value >= 15000) return 'error';
+  else return 'info';
+});
+
+const wordsCountAmountMessage = computed(() => {
+  if (!wordsCount.value) return '';
+
+  const count = wordsCount.value;
+  if (wordsCountAmountLevel.value === 'info')
+    return `El documento contiene aproximadamente ${count} palabras.`;
+  if (wordsCountAmountLevel.value === 'warning')
+    return `El documento contiene aproximadamente ${count} palabras. El análisis puede tardar algo más de lo normal.`;
+  if (wordsCountAmountLevel.value === 'error')
+    return `El documento contiene un gran número de palabras, aproximadamente ${count}. Puede que se demore el análisis varios minutos.`;
+  return '';
+});
 
 const stats = computed(() => {
   return aspects.value?.length

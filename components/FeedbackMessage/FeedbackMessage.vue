@@ -7,7 +7,9 @@
 <script setup lang="ts">
 import type { FeedbackMessageProps } from './FeedbackMessage.interfaces';
 
-defineProps<FeedbackMessageProps>();
+withDefaults(defineProps<FeedbackMessageProps>(), {
+  type: 'info',
+});
 </script>
 
 <style lang="scss" scoped>
