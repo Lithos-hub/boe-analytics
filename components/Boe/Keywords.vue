@@ -4,7 +4,7 @@
       v-if="!isLoadingKeywords && keywords && keywords.length"
       class="BoeAnalytics__keywords-list">
       <li v-for="keyword in keywords" :key="keyword">
-        <small>{{ keyword }}</small>
+        <UBadge color="blue" variant="soft">{{ keyword }}</UBadge>
       </li>
     </ul>
     <div
@@ -26,11 +26,7 @@ defineProps<KeywordsProps>();
 .BoeAnalytics {
   &__keywords {
     ul {
-      @apply flex flex-wrap gap-1;
-
-      li {
-        @apply bg-primary/10 rounded-full border border-primary-500 px-5 py-1 text-sm font-bold text-primary-200;
-      }
+      @apply flex flex-wrap gap-2;
     }
   }
 }
