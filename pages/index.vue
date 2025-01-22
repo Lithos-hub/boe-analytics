@@ -270,6 +270,7 @@ const scrapBoe = async () => {
     boeUrl.value = response?.url ?? '';
   } catch (error) {
     console.error('Error scraping BOE data:', error);
+    throw error;
   }
 };
 
@@ -283,10 +284,6 @@ const copyToClipboard = (text: string) => {
 };
 
 const generateSummary = async () => {
-  if (!scrapData.value) {
-    return;
-  }
-
   try {
     return await $fetch<string>(`/api/openai/summary`, {
       method: 'POST',
@@ -296,6 +293,7 @@ const generateSummary = async () => {
     });
   } catch (error) {
     console.error('Error generating summary:', error);
+    throw error;
   }
 };
 
@@ -313,6 +311,7 @@ const generateMainPoints = async (): Promise<MainPoint[] | undefined> => {
     });
   } catch (error) {
     console.error('Error getting main points:', error);
+    throw error;
   }
 };
 
@@ -330,6 +329,7 @@ const generateKeywords = async (): Promise<Keyword[] | undefined> => {
     });
   } catch (error) {
     console.error('Error getting keywords:', error);
+    throw error;
   }
 };
 
@@ -347,6 +347,7 @@ const generateAreas = async (): Promise<Area[] | undefined> => {
     });
   } catch (error) {
     console.error('Error getting areas:', error);
+    throw error;
   }
 };
 
@@ -364,6 +365,7 @@ const generateAspects = async (): Promise<Aspect[] | undefined> => {
     });
   } catch (error) {
     console.error('Error getting aspects:', error);
+    throw error;
   }
 };
 
@@ -375,14 +377,14 @@ const postBoe = async (_summary: string) => {
       url: scrapData.value?.url ?? '',
       summary: _summary,
     })
-    .select();
+    .single<BoeResponse>();
 
   if (error) {
     console.error('Error creating BOE:', error);
-    return;
+    throw error;
   }
 
-  boeId.value = data.value[0].id;
+  boeId.value = data.id;
   boeUrl.value = scrapData.value?.url ?? '';
   summary.value = _summary;
 };
@@ -399,7 +401,7 @@ const postAspects = async (_aspects: Aspect[]) => {
 
   if (error) {
     console.error('Error saving aspects:', error);
-    return;
+    throw error;
   }
 
   aspects.value = _aspects.map(({ aspect, type, description }) => ({
@@ -410,19 +412,16 @@ const postAspects = async (_aspects: Aspect[]) => {
 };
 
 const postKeywords = async (_keywords: Keyword[]) => {
-  const { error } = await client
-    .from('keywords')
-    .insert(
-      _keywords.map(({ keyword }) => ({
-        boe_id: boeId.value,
-        keyword,
-      })),
-    )
-    .select();
+  const { error } = await client.from('keywords').insert(
+    _keywords.map(({ keyword }) => ({
+      boe_id: boeId.value,
+      keyword,
+    })),
+  );
 
   if (error) {
     console.error('Error saving keywords:', error);
-    return;
+    throw error;
   }
 
   keywords.value = _keywords.map(({ keyword }) => keyword);
@@ -439,7 +438,7 @@ const postAreas = async (_areas: Area[]) => {
 
   if (error) {
     console.error('Error saving areas:', error);
-    return;
+    throw error;
   }
 
   areas.value = _areas.map(({ name, description }) => ({
@@ -458,26 +457,20 @@ const postMainPoints = async (_mainPoints: MainPoint[]) => {
 
   if (error) {
     console.error('Error saving main points:', error);
-    return;
+    throw error;
   }
 
   mainPoints.value = _mainPoints.map(({ point }) => point);
 };
 
 const getBoeData = async () => {
-  const client = useSupabaseClient();
   isLoadingSummary.value = true;
   isLoadingMainPoints.value = true;
   isLoadingKeywords.value = true;
   isLoadingAreas.value = true;
   isLoadingAspects.value = true;
 
-  debugger;
-
   try {
-    // We scrap the BOE
-    await scrapBoe();
-
     // We get the BOE from the database
     const { data: boeData } = await client
       .from('boes')
@@ -485,36 +478,61 @@ const getBoeData = async () => {
       .eq('date', dateRaw)
       .single<BoeResponse>();
 
-    // If the BOE doesn't exist, we generate and create the summary and post the BOE
-    if (!boeData) {
-      const summary = await generateSummary();
-      isLoadingSummary.value = false;
-      await postBoe(summary as string);
-    } else {
-      // Else, we set the data from the database
-      boeId.value = boeData?.id ?? null;
-      summary.value = boeData?.summary ?? '';
+    // If the BOE exists, we set the id and url
+    if (boeData) {
+      boeId.value = boeData.id;
+      boeUrl.value = boeData.url;
+    }
+
+    // If the areas exist, we set them
+    if (boeData?.areas.length) {
+      areas.value =
+        boeData?.areas.map(({ name, description }) => ({
+          name,
+          description,
+        })) ?? [];
+      isLoadingAreas.value = false;
+    }
+
+    if (boeData?.main_points.length) {
+      mainPoints.value = boeData?.main_points.map(({ point }) => point) ?? [];
+      isLoadingMainPoints.value = false;
+    }
+
+    // If the keywords exist, we set them
+    if (boeData?.keywords.length) {
+      keywords.value = boeData?.keywords.map(({ keyword }) => keyword) ?? [];
+      isLoadingKeywords.value = false;
+    }
+
+    // If the aspects exist, we set them
+    if (boeData?.aspects.length) {
       aspects.value =
         boeData?.aspects.map(({ aspect, type, description }) => ({
           aspect,
           type,
           description,
         })) ?? [];
-      mainPoints.value = boeData?.main_points.map(({ point }) => point) ?? [];
-      keywords.value = boeData?.keywords.map(({ keyword }) => keyword) ?? [];
-      areas.value =
-        boeData?.areas.map(({ name, description }) => ({
-          name,
-          description,
-        })) ?? [];
-
-      isLoadingSummary.value = false;
-      isLoadingMainPoints.value = false;
-      isLoadingKeywords.value = false;
-      isLoadingAreas.value = false;
       isLoadingAspects.value = false;
     }
 
+    // If the summary exists, we set it
+    if (boeData?.summary) {
+      summary.value = boeData?.summary ?? '';
+      isLoadingSummary.value = false;
+    }
+
+    // We scrap the BOE (always, and only once)
+    await scrapBoe();
+
+    // If the BOE doesn't exist, we generate and create the summary and post the BOE
+    if (!boeData) {
+      const summary = await generateSummary();
+      isLoadingSummary.value = false;
+      await postBoe(summary as string);
+    }
+
+    // If the aspects don't exist, we generate and post them
     if (!aspects.value.length) {
       const aspects = await generateAspects();
       if (!aspects) return;
@@ -523,6 +541,7 @@ const getBoeData = async () => {
       isLoadingAspects.value = false;
     }
 
+    // If the main points don't exist, we generate and post them
     if (!mainPoints.value.length) {
       const mainPoints = await generateMainPoints();
       if (!mainPoints) return;
@@ -531,6 +550,7 @@ const getBoeData = async () => {
       isLoadingMainPoints.value = false;
     }
 
+    // If the keywords don't exist, we generate and post them
     if (!keywords.value.length) {
       const keywords = await generateKeywords();
       if (!keywords) return;
@@ -539,6 +559,7 @@ const getBoeData = async () => {
       isLoadingKeywords.value = false;
     }
 
+    // If the areas don't exist, we generate and post them
     if (!areas.value.length) {
       const areas = await generateAreas();
       if (!areas) return;
@@ -546,8 +567,8 @@ const getBoeData = async () => {
       await postAreas(areas);
       isLoadingAreas.value = false;
     }
-  } catch (e) {
-    console.error('Error in getBoeData:', e);
+  } catch (error) {
+    console.error('Error in getBoeData:', error);
   } finally {
     isLoadingSummary.value = false;
     isLoadingMainPoints.value = false;
@@ -571,7 +592,7 @@ onMounted(async () => {
   }
 
   &__calendar {
-    @apply col-span-12 xl:col-span-6 2xl:col-span-4;
+    @apply col-span-12 md:col-span-6 2xl:col-span-4;
 
     &--card {
       @apply min-h-[400px];
