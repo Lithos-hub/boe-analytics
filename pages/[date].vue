@@ -72,22 +72,6 @@
           </Card>
         </article>
       </section>
-      <section class="Home__stats">
-        <article>
-          <Card class="Home__stats--card" title="Estadísticas">
-            <BoeStats v-if="!isLoadingAspects" :stats />
-            <Loader
-              v-else
-              class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              :status-messages="[
-                'Accediendo al documento...',
-                'Extrayendo información...',
-                'Generando estadísticas...',
-                'Guardando en base de datos...',
-              ]" />
-          </Card>
-        </article>
-      </section>
       <section class="Home__mainPoints">
         <article>
           <Card class="Home__mainPoints--card" title="Puntos clave del boletín">
@@ -108,6 +92,22 @@
         <article>
           <Card class="Home__areas--card" title="Áreas">
             <BoeAreas :areas :is-loading-areas="isLoadingAreas" />
+          </Card>
+        </article>
+      </section>
+      <section class="Home__stats">
+        <article>
+          <Card class="Home__stats--card" title="Estadísticas">
+            <BoeStats v-if="!isLoadingAspects" :stats />
+            <Loader
+              v-else
+              class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              :status-messages="[
+                'Accediendo al documento...',
+                'Extrayendo información...',
+                'Generando estadísticas...',
+                'Guardando en base de datos...',
+              ]" />
           </Card>
         </article>
       </section>
@@ -143,9 +143,10 @@
       </section>
     </div>
     <div v-else class="relative">
-      <pre class="rounded-2xl bg-dark-950/40 p-5 text-green-500">{{
-        boeAnalysisJSON
-      }}</pre>
+      <pre
+        class="overflow-x-auto rounded-2xl bg-dark-950/40 p-5 text-green-500"
+        >{{ boeAnalysisJSON }}</pre
+      >
       <!-- Button to copy JSON to clipboard -->
       <div
         class="absolute right-10 top-5 flex w-[80px] flex-col items-center gap-2">
@@ -633,15 +634,7 @@ onMounted(async () => {
   }
 
   &__summary {
-    @apply col-span-12 md:col-span-6 2xl:col-span-5;
-
-    &--card {
-      @apply h-full min-h-[400px];
-    }
-  }
-
-  &__stats {
-    @apply col-span-12 md:col-span-6 2xl:col-span-3;
+    @apply col-span-12 md:col-span-6 2xl:col-span-4;
 
     &--card {
       @apply h-full min-h-[400px];
@@ -665,6 +658,14 @@ onMounted(async () => {
   }
 
   &__areas {
+    @apply col-span-12 md:col-span-6 2xl:col-span-4;
+
+    &--card {
+      @apply h-full min-h-[400px];
+    }
+  }
+
+  &__stats {
     @apply col-span-12 md:col-span-6 2xl:col-span-4;
 
     &--card {
