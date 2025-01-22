@@ -43,11 +43,10 @@
           {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
         </UButton>
       </div>
-      <div
+      <FeedbackMessage
         v-if="wordsCount"
-        class="h-auto rounded-lg border border-cyan-500/50 bg-blue-950 p-1 px-5 text-right text-cyan-200">
-        <p>El documento contiene aproximadamente {{ wordsCount }} palabras.</p>
-      </div>
+        :message="`El documento contiene aproximadamente ${wordsCount} palabras.`"
+        type="info" />
     </header>
     <div class="Home__wrapper" v-if="!showJSON">
       <section class="Home__calendar">

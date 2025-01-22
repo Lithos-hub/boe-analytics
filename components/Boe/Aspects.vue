@@ -18,7 +18,7 @@
       v-else-if="isLoadingAspects">
       <Loader :status-messages="statusMessages[type]" />
     </div>
-    <p class="text-red-500" v-else>No se ha podido generar la información.</p>
+    <FeedbackMessage v-else :message="noAspectsMessage[type]" type="info" />
   </div>
 </template>
 
@@ -31,6 +31,12 @@ const statusMessages = {
   positive: ['Generando aspectos positivos...'],
   negative: ['Generando aspectos negativos...'],
   neutral: ['Generando aspectos neutros...'],
+};
+
+const noAspectsMessage = {
+  positive: 'No se han encontrado aspectos positivos.',
+  negative: 'No se han encontrado aspectos negativos.',
+  neutral: 'No se han encontrado aspectos neutros.',
 };
 </script>
 
