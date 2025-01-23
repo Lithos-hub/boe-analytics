@@ -169,7 +169,6 @@
 import type {
   Area,
   Aspect,
-  Boe,
   BoeResponse,
   Keyword,
   MainPoint,
@@ -441,7 +440,6 @@ const setBoeData = (boeData: BoeResponse) => {
 
 const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
   const text = scrapData.value?.text ?? '';
-  const supabaseServices = new SupabaseServices();
 
   if (!boeData || !boeData?.summary) {
     const summaryData = await generateSummary(text);
