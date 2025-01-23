@@ -166,6 +166,7 @@
 </template>
 
 <script setup lang="ts">
+import type { AvailableBoe } from '~/components/Calendar/Calendar.interfaces';
 import type {
   Area,
   Aspect,
@@ -222,7 +223,7 @@ const keywords = ref<string[]>([]);
 const areas = ref<Area[]>([]);
 const aspects = ref<Aspect[]>([]);
 
-const boesList = ref<{ date: string }[]>([]);
+const boesList = ref<AvailableBoe[]>([]);
 
 // Computed
 const wordsCount = computed(
@@ -292,7 +293,7 @@ const downloadPDF = () => {
 };
 
 const getAllBoes = async () => {
-  const { data, error } = await client.from('boes').select('date');
+  const { data, error } = await client.from('boes').select('date, url');
   if (error) {
     console.error('Error getting all BOEs:', error);
     return;
@@ -310,13 +311,19 @@ const copyToClipboard = (text: string) => {
 };
 
 const postBoe = async (_summary: string) => {
-  const savedBoeId = await supabaseServices.saveAndReturnBoeId({
-    date: route.params.date as string,
-    url: scrapData.value?.url ?? '',
-    summary: _summary,
-  });
+  try {
+    const postedBoeId = await supabaseServices.saveAndReturnBoeId({
+      date: route.params.date as string,
+      url: scrapData.value?.url ?? '',
+      summary: _summary,
+    });
 
-  boeId.value = savedBoeId ?? null;
+    boeId.value = postedBoeId ?? null;
+    summary.value = _summary;
+  } catch (error) {
+    console.error('Error saving boe:', error);
+    throw error;
+  }
 };
 
 const postAspects = async (_aspects: Aspect[]) => {
@@ -394,6 +401,12 @@ const setBoeData = (boeData: BoeResponse) => {
         boeUrl.value = boeData.url;
       }
     },
+    summary: () => {
+      if (boeData?.summary) {
+        summary.value = boeData.summary;
+        isLoadingSummary.value = false;
+      }
+    },
     areas: () => {
       if (boeData?.areas?.length) {
         areas.value = boeData.areas.map(({ name, description }) => ({
@@ -427,12 +440,6 @@ const setBoeData = (boeData: BoeResponse) => {
         isLoadingAspects.value = false;
       }
     },
-    summary: () => {
-      if (boeData?.summary) {
-        summary.value = boeData.summary;
-        isLoadingSummary.value = false;
-      }
-    },
   };
 
   Object.values(dataMappers).forEach((mapper) => mapper());
@@ -441,19 +448,12 @@ const setBoeData = (boeData: BoeResponse) => {
 const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
   const text = scrapData.value?.text ?? '';
 
-  if (!boeData || !boeData?.summary) {
-    const summaryData = await generateSummary(text);
-    await postBoe(summaryData as string);
-    isLoadingSummary.value = false;
-    await getAllBoes();
-  }
-
   const generateTasks: GenerateTask[] = [
     {
-      condition: !aspects.value.length,
-      generate: () => generateAspects(text),
-      post: postAspects,
-      loadingState: () => (isLoadingAspects.value = false),
+      condition: !boeData || !boeData?.summary,
+      generate: () => generateSummary(text),
+      post: postBoe,
+      loadingState: () => (isLoadingSummary.value = false),
     },
     {
       condition: !mainPoints.value.length,
@@ -473,6 +473,12 @@ const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
       post: postAreas,
       loadingState: () => (isLoadingAreas.value = false),
     },
+    {
+      condition: !aspects.value.length,
+      generate: () => generateAspects(text),
+      post: postAspects,
+      loadingState: () => (isLoadingAspects.value = false),
+    },
   ];
 
   for (const task of generateTasks) {
@@ -484,6 +490,8 @@ const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
       }
     }
   }
+
+  await getAllBoes();
 };
 
 const getBoeData = async () => {
@@ -501,7 +509,13 @@ const getBoeData = async () => {
     await generateAndPostMissingData(boeData);
   } catch (error) {
     console.error('Error in getBoeData:', error);
+
+    if ((error as { statusCode: number }).statusCode === 404) {
+      // Post BOE with empty URL and empty summary
+      await postBoe('');
+    }
   } finally {
+    await getAllBoes();
     resetLoadingStates();
   }
 };

@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 
   // We navigate to the URL
   await page.goto(url);
-
+  
   //   First we get the <li class="dispo"> element
   const disposicionesGenerales = await page.$('.dispo');
 
@@ -75,15 +75,7 @@ export default defineEventHandler(async (event) => {
   // We navigate to the docUrl
   await page.goto(docUrl);
 
-  // If page text contains Error 404 message, we throw an error
-  // const error404 = await page.getByText('Error 404');
-
-  // if (error404) {
-  //   throw createError({
-  //     statusCode: 404,
-  //     statusMessage: 'Error 404: Page not found',
-  //   });
-  // }
+  console.log('docUrl', docUrl);
 
   //   In that page, we need to get the id="DOdocText" element
   const docTextElement = await page.$('#DOdocText');
@@ -106,11 +98,10 @@ export default defineEventHandler(async (event) => {
       text,
       url: docUrl,
     };
-  } catch (error) {
-    console.error('Error scraping BOE data:', error);
+  } catch (error: unknown) {
     throw createError({
-      statusCode: 500,
-      statusMessage: 'Error scraping BOE data',
+      statusCode: (error as { statusCode: number }).statusCode,
+      statusMessage: (error as { statusMessage: string }).statusMessage,
     });
   }
 });
