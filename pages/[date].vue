@@ -520,9 +520,10 @@ const getBoeData = async () => {
   }
 };
 
-onMounted(async () => {
-  await getAllBoes();
-  await getBoeData();
+onMounted(() => {
+  Promise.all([getAllBoes(), getBoeData()]).catch((error) => {
+    console.error('Initial loading error:', error);
+  });
 });
 </script>
 
