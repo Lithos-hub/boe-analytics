@@ -166,7 +166,6 @@
 </template>
 
 <script setup lang="ts">
-import type { ScrapResponse } from '@/server/api/scrap/scrap.interfaces';
 import type {
   Area,
   Aspect,
@@ -197,14 +196,15 @@ const route = useRoute();
 
 const formattedDate = formatDateToLocaleString(route.params.date as string);
 
+// Composables
+const { scrapData, isLoadingScrap, scrapUrl } = useScraper();
+
 // State
-const scrapData = ref<ScrapResponse | null>(null);
 const boeUrl = ref<string>('');
 const boeId = ref<number | null>(null);
 
 const showJSON = ref(false);
 
-const isLoadingScrap = ref(true);
 const isLoadingSummary = ref(true);
 const isLoadingMainPoints = ref(true);
 const isLoadingKeywords = ref(true);
@@ -297,22 +297,6 @@ const getAllBoes = async () => {
   boesList.value = data;
 };
 
-const scrapBoe = async () => {
-  try {
-    const response = await $fetch<ScrapResponse>(
-      `/api/scrap/${route.params.date}`,
-    );
-    scrapData.value = response;
-    boeUrl.value = response?.url ?? '';
-    isLoadingScrap.value = false;
-  } catch (error) {
-    console.error('Error scraping BOE data:', error);
-    throw error;
-  } finally {
-    isLoadingScrap.value = false;
-  }
-};
-
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
   showCopiedText.value = true;
@@ -323,17 +307,12 @@ const copyToClipboard = (text: string) => {
 };
 
 const generateSummary = async () => {
-  try {
-    return await $fetch<string>(`/api/openai/summary`, {
-      method: 'POST',
-      body: {
-        text: scrapData.value?.text ?? '',
-      },
-    });
-  } catch (error) {
-    console.error('Error generating summary:', error);
-    throw error;
-  }
+  return await $fetch<string>(`/api/openai/summary`, {
+    method: 'POST',
+    body: {
+      text: scrapData.value?.text ?? '',
+    },
+  });
 };
 
 const generateMainPoints = async (): Promise<MainPoint[] | undefined> => {
@@ -635,7 +614,7 @@ const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
 const getBoeData = async () => {
   try {
     initializeLoadingStates();
-    await scrapBoe();
+    await scrapUrl(route.params.date as string);
 
     const { data: boeData } = await client
       .from('boes')
