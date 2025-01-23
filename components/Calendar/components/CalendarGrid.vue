@@ -54,12 +54,18 @@
           <!-- If boe available by date, show green check icon -->
           <UIcon
             v-if="
-              boesAvailableByDates.includes(
-                formatDate(selectedYear, selectedMonth, day),
-              )
+              availableBoesByDate(formatDate(selectedYear, selectedMonth, day))
             "
             name="i-heroicons-document-check"
-            class="h-4 w-4 text-green-500" />
+            class="h-4 w-4 text-green-500"
+            :class="{
+              'text-green-500': availableBoesByDateAndUrl(
+                formatDate(selectedYear, selectedMonth, day),
+              ),
+              'text-red-500': availableBoesByDateAndNoUrl(
+                formatDate(selectedYear, selectedMonth, day),
+              ),
+            }" />
         </div>
       </NuxtLink>
 
@@ -86,7 +92,7 @@
 import { weekDaysShort } from '@/components/Calendar/Calendar.const';
 import type { CalendarGridProps } from './CalendarGrid.interfaces';
 
-const { monthDays, boesAvailableByDates, selectedYear, selectedMonth } =
+const { monthDays, selectedYear, selectedMonth, availableBoesList } =
   defineProps<CalendarGridProps>();
 
 const emits = defineEmits(['set-previous-month', 'set-next-month']);
@@ -101,6 +107,18 @@ const goToPreviousMonth = () => {
 
 const goToNextMonth = () => {
   emits('set-next-month');
+};
+
+const availableBoesByDate = (_date: string) => {
+  return availableBoesList.map(({ date }) => date).includes(_date);
+};
+
+const availableBoesByDateAndUrl = (_date: string) => {
+  return availableBoesList.some(({ date, url }) => date === _date && url);
+};
+
+const availableBoesByDateAndNoUrl = (_date: string) => {
+  return availableBoesList.some(({ date, url }) => date === _date && !url);
 };
 </script>
 

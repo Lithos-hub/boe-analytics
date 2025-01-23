@@ -1,5 +1,6 @@
-export type BoeListItem = { date: string };
+export type AvailableBoe = { date: string; url: string };
 
 export interface CalendarProps {
-  boesList: BoeListItem[];
+  boesList: AvailableBoe[];
 }
+

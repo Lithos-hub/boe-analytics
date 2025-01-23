@@ -7,7 +7,7 @@
       :month-days="monthDays"
       :selected-month="selectedMonth"
       :selected-year="selectedYear"
-      :boes-available-by-dates="availableBoeListByDates"
+      :available-boes-list="availableBoeListByDates"
       @set-previous-month="setPreviousMonth"
       @set-next-month="setNextMonth" />
   </div>
@@ -32,7 +32,7 @@ const selectedMonth = ref(Number(month));
 const selectedYear = ref(Number(year));
 
 const availableBoeListByDates = computed(
-  () => boesList?.map(({ date }) => date) ?? [],
+  () => boesList?.map(({ date, url }) => ({ date, url })) ?? [],
 );
 
 const monthDays = computed(() => {
