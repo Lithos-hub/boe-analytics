@@ -174,6 +174,7 @@ import type {
   Keyword,
   MainPoint,
 } from '~/models/boe';
+import { SupabaseServices } from '~/services/supabase';
 import type { Database } from '~/types/supabase';
 
 interface Stats {
@@ -198,6 +199,9 @@ const formattedDate = formatDateToLocaleString(route.params.date as string);
 
 // Composables
 const { scrapData, isLoadingScrap, scrapUrl } = useScraper();
+
+// Instances
+const supabaseServices = new SupabaseServices();
 
 // State
 const boeUrl = ref<string>('');
@@ -306,195 +310,65 @@ const copyToClipboard = (text: string) => {
   }, 2000);
 };
 
-const generateSummary = async () => {
-  return await $fetch<string>(`/api/openai/summary`, {
-    method: 'POST',
-    body: {
-      text: scrapData.value?.text ?? '',
-    },
-  });
-};
-
-const generateMainPoints = async (): Promise<MainPoint[] | undefined> => {
-  if (mainPoints.value.length || !scrapData.value) {
-    return undefined;
-  }
-
-  try {
-    return await $fetch<MainPoint[]>(`/api/openai/main-points`, {
-      method: 'POST',
-      body: {
-        text: scrapData.value?.text ?? '',
-      },
-    });
-  } catch (error) {
-    console.error('Error getting main points:', error);
-    throw error;
-  }
-};
-
-const generateKeywords = async (): Promise<Keyword[] | undefined> => {
-  if (keywords.value.length || !scrapData.value) {
-    return undefined;
-  }
-
-  try {
-    return await $fetch<Keyword[]>(`/api/openai/keywords`, {
-      method: 'POST',
-      body: {
-        text: scrapData.value?.text ?? '',
-      },
-    });
-  } catch (error) {
-    console.error('Error getting keywords:', error);
-    throw error;
-  }
-};
-
-const generateAreas = async (): Promise<Area[] | undefined> => {
-  if (areas.value.length || !scrapData.value) {
-    return undefined;
-  }
-
-  try {
-    return await $fetch<Area[]>(`/api/openai/areas`, {
-      method: 'POST',
-      body: {
-        text: scrapData.value?.text ?? '',
-      },
-    });
-  } catch (error) {
-    console.error('Error getting areas:', error);
-    throw error;
-  }
-};
-
-const generateAspects = async (): Promise<Aspect[] | undefined> => {
-  if (aspects.value.length || !scrapData.value) {
-    return undefined;
-  }
-
-  try {
-    return await $fetch<Aspect[]>(`/api/openai/analysis-points`, {
-      method: 'POST',
-      body: {
-        text: scrapData.value?.text ?? '',
-      },
-    });
-  } catch (error) {
-    console.error('Error getting aspects:', error);
-    throw error;
-  }
-};
-
 const postBoe = async (_summary: string) => {
-  const { data, error } = await client
-    .from('boes')
-    .insert({
-      date: route.params.date as string,
-      url: scrapData.value?.url ?? '',
-      summary: _summary,
-    })
-    .select()
-    .single<Boe>();
+  const savedBoeId = await supabaseServices.saveAndReturnBoeId({
+    date: route.params.date as string,
+    url: scrapData.value?.url ?? '',
+    summary: _summary,
+  });
 
-  if (error) {
-    console.error('Error creating BOE:', error);
-    throw error;
-  }
-
-  boeId.value = data?.id ?? null;
-  boeUrl.value = scrapData.value?.url ?? '';
-  summary.value = _summary;
+  boeId.value = savedBoeId ?? null;
 };
 
 const postAspects = async (_aspects: Aspect[]) => {
-  if (!boeId.value) {
-    throw new Error('BOE ID is mandatory');
-  }
-
-  const { error } = await client.from('aspects').insert(
-    _aspects.map(({ aspect, type, description }) => ({
-      boe_id: boeId.value,
+  if (!boeId.value) return;
+  try {
+    await supabaseServices.saveAspects(_aspects, boeId.value);
+    aspects.value = _aspects.map(({ aspect, type, description }) => ({
       aspect,
       type,
       description,
-    })),
-  );
-
-  if (error) {
+    }));
+  } catch (error) {
     console.error('Error saving aspects:', error);
     throw error;
   }
-
-  aspects.value = _aspects.map(({ aspect, type, description }) => ({
-    aspect,
-    type,
-    description,
-  }));
 };
 
 const postKeywords = async (_keywords: Keyword[]) => {
-  if (!boeId.value) {
-    throw new Error('BOE ID is mandatory');
-  }
-
-  const { error } = await client.from('keywords').insert(
-    _keywords.map(({ keyword }) => ({
-      boe_id: boeId.value,
-      keyword,
-    })),
-  );
-
-  if (error) {
+  if (!boeId.value) return;
+  try {
+    await supabaseServices.saveKeywords(_keywords, boeId.value);
+    keywords.value = _keywords.map(({ keyword }) => keyword);
+  } catch (error) {
     console.error('Error saving keywords:', error);
     throw error;
   }
-
-  keywords.value = _keywords.map(({ keyword }) => keyword);
 };
 
 const postAreas = async (_areas: Area[]) => {
-  if (!boeId.value) {
-    throw new Error('BOE ID is mandatory');
-  }
-
-  const { error } = await client.from('areas').insert(
-    _areas.map(({ name, description }) => ({
-      boe_id: boeId.value,
+  if (!boeId.value) return;
+  try {
+    await supabaseServices.saveAreas(_areas, boeId.value);
+    areas.value = _areas.map(({ name, description }) => ({
       name,
       description,
-    })),
-  );
-
-  if (error) {
+    }));
+  } catch (error) {
     console.error('Error saving areas:', error);
     throw error;
   }
-
-  areas.value = _areas.map(({ name, description }) => ({
-    name,
-    description,
-  }));
 };
 
 const postMainPoints = async (_mainPoints: MainPoint[]) => {
-  if (!boeId.value) {
-    throw new Error('BOE ID is mandatory');
-  }
-  const { error } = await client.from('main_points').insert(
-    _mainPoints.map(({ point }) => ({
-      boe_id: boeId.value,
-      point,
-    })),
-  );
-
-  if (error) {
+  if (!boeId.value) return;
+  try {
+    await supabaseServices.saveMainPoints(_mainPoints, boeId.value);
+    mainPoints.value = _mainPoints.map(({ point }) => point);
+  } catch (error) {
     console.error('Error saving main points:', error);
     throw error;
   }
-
-  mainPoints.value = _mainPoints.map(({ point }) => point);
 };
 
 const initializeLoadingStates = () => {
@@ -566,8 +440,11 @@ const setBoeData = (boeData: BoeResponse) => {
 };
 
 const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
+  const text = scrapData.value?.text ?? '';
+  const supabaseServices = new SupabaseServices();
+
   if (!boeData || !boeData?.summary) {
-    const summaryData = await generateSummary();
+    const summaryData = await generateSummary(text);
     await postBoe(summaryData as string);
     isLoadingSummary.value = false;
     await getAllBoes();
@@ -576,25 +453,25 @@ const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
   const generateTasks: GenerateTask[] = [
     {
       condition: !aspects.value.length,
-      generate: generateAspects,
+      generate: () => generateAspects(text),
       post: postAspects,
       loadingState: () => (isLoadingAspects.value = false),
     },
     {
       condition: !mainPoints.value.length,
-      generate: generateMainPoints,
+      generate: () => generateMainPoints(text),
       post: postMainPoints,
       loadingState: () => (isLoadingMainPoints.value = false),
     },
     {
       condition: !keywords.value.length,
-      generate: generateKeywords,
+      generate: () => generateKeywords(text),
       post: postKeywords,
       loadingState: () => (isLoadingKeywords.value = false),
     },
     {
       condition: !areas.value.length,
-      generate: generateAreas,
+      generate: () => generateAreas(text),
       post: postAreas,
       loadingState: () => (isLoadingAreas.value = false),
     },
