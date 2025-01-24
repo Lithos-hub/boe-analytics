@@ -1,11 +1,14 @@
 <template>
   <div class="text-white/80">
-    <Navbar />
+    <!-- <Navbar />
     <Container class="max-h-[calc(100vh-56px)] overflow-y-auto">
       <div class="p-5">
         <NuxtPage />
       </div>
-    </Container>
+    </Container> -->
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
 
     <PatternBackground />
   </div>

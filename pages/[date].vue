@@ -1,42 +1,8 @@
 <template>
   <div class="flex flex-col gap-5">
-    <header class="grid grid-cols-12 items-center justify-center gap-5">
-      <div
-        class="col-span-12 flex flex-wrap items-center justify-center gap-1 xl:col-span-4 xl:justify-start">
-        <UButton
-          color="secondary"
-          variant="soft"
-          class="border border-secondary-500/50"
-          icon="i-heroicons-arrow-top-right-on-square"
-          :to="boeUrl"
-          target="_blank">
-          Ver BOE original
-        </UButton>
-        <UButton
-          color="green"
-          variant="soft"
-          class="border border-green-500/50"
-          icon="i-heroicons-arrow-down-tray"
-          disabled
-          @click="downloadPDF">
-          Descargar PDF
-        </UButton>
-        <UButton
-          color="dark"
-          variant="soft"
-          class="border border-dark-500/50"
-          :icon="
-            showJSON
-              ? 'i-heroicons-document-chart-bar'
-              : 'i-heroicons-code-bracket'
-          "
-          @click="showJSON = !showJSON">
-          {{ showJSON ? 'Ver análisis' : 'Ver JSON' }}
-        </UButton>
-      </div>
-      <div class="col-span-12 text-center xl:col-span-4">
-        <h2 class="text-white">BOE del {{ formattedDate }}</h2>
-      </div>
+    <header class="flex items-center justify-between">
+      <h2 class="text-white">BOE del {{ formattedDate }}</h2>
+
       <div class="relative col-span-12 mx-auto md:ml-auto xl:col-span-4">
         <FeedbackMessage
           v-if="wordsCountAmountMessage && !isLoadingScrap"
@@ -46,13 +12,6 @@
       </div>
     </header>
     <div class="Home__wrapper" v-if="!showJSON">
-      <section class="Home__calendar">
-        <article>
-          <Card class="Home__calendar--card" title="Calendario">
-            <Calendar :boes-list="boesList" />
-          </Card>
-        </article>
-      </section>
       <section class="Home__summary">
         <article>
           <Card class="Home__summary--card" title="Resumen">
@@ -180,6 +139,18 @@ interface GenerateTask {
   loadingState: () => void;
 }
 
+// Pinia
+const {
+  summary,
+  mainPoints,
+  areas,
+  keywords,
+  aspects,
+  positiveAspects,
+  negativeAspects,
+  neutralAspects,
+} = storeToRefs(useBoeStore());
+
 // Consts
 const client = useSupabaseClient<Database>();
 const route = useRoute();
@@ -200,6 +171,11 @@ const loadingAspectsMessages = [
 ];
 
 // Meta
+definePageMeta({
+  layout: 'boe',
+});
+
+// Head
 useHead({
   title: `BOE del ${formattedDate} - BOE Analytics`,
   meta: [
@@ -272,13 +248,6 @@ const isLoadingKeywords = ref(true);
 const isLoadingAreas = ref(true);
 const isLoadingAspects = ref(true);
 
-const summary = ref<string>('');
-const mainPoints = ref<string[]>([]);
-const keywords = ref<string[]>([]);
-const areas = ref<Area[]>([]);
-const aspects = ref<Aspect[]>([]);
-const boesList = ref<AvailableBoe[]>([]);
-
 // Computed
 const wordsCount = computed(
   () => scrapData.value?.text?.split(' ').length ?? 0,
@@ -317,16 +286,6 @@ const stats = computed(() => {
     : null;
 });
 
-const positiveAspects = computed(() =>
-  aspects.value?.filter(({ type }) => type === 'positive'),
-);
-const negativeAspects = computed(() =>
-  aspects.value?.filter(({ type }) => type === 'negative'),
-);
-const neutralAspects = computed(() =>
-  aspects.value?.filter(({ type }) => type === 'neutral'),
-);
-
 const boeAnalysisJSON = computed(() =>
   JSON.stringify(
     {
@@ -344,16 +303,6 @@ const boeAnalysisJSON = computed(() =>
 const downloadPDF = () => {
   console.log('downloadPDF');
 };
-
-const getAllBoes = async () => {
-  const { data, error } = await client.from('boes').select('date, url');
-  if (error) {
-    console.error('Error getting all BOEs:', error);
-    return;
-  }
-  boesList.value = data;
-};
-
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
   showCopiedText.value = true;
@@ -520,25 +469,25 @@ const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
       loadingState: () => (isLoadingSummary.value = false),
     },
     {
-      condition: !mainPoints.value.length,
+      condition: !mainPoints.value?.length,
       generate: () => generateMainPoints(text),
       post: postMainPoints,
       loadingState: () => (isLoadingMainPoints.value = false),
     },
     {
-      condition: !keywords.value.length,
+      condition: !keywords.value?.length,
       generate: () => generateKeywords(text),
       post: postKeywords,
       loadingState: () => (isLoadingKeywords.value = false),
     },
     {
-      condition: !areas.value.length,
+      condition: !areas.value?.length,
       generate: () => generateAreas(text),
       post: postAreas,
       loadingState: () => (isLoadingAreas.value = false),
     },
     {
-      condition: !aspects.value.length,
+      condition: !aspects.value?.length,
       generate: () => generateAspects(text),
       post: postAspects,
       loadingState: () => (isLoadingAspects.value = false),
@@ -581,12 +530,12 @@ const getBoeData = async () => {
       await postBoe('');
     }
   } finally {
-    await Promise.all([getAllBoes(), resetLoadingStates()]);
+    resetLoadingStates();
   }
 };
 
 onMounted(() => {
-  Promise.all([getAllBoes(), getBoeData()]).catch((error) => {
+  Promise.all([getBoeData()]).catch((error) => {
     console.error('Initial loading error:', error);
   });
 });

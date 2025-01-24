@@ -1,8 +1,25 @@
 <template>
-  <div class="flex flex-col">
+  <div class="flex flex-col gap-2.5">
     <CalendarFilters
       v-model:selected-month-model="selectedMonth"
       v-model:selected-year-model="selectedYear" />
+    <div class="flex items-center justify-center gap-5">
+      <UButton
+        icon="i-heroicons-chevron-left"
+        color="white"
+        variant="soft"
+        class="rounded-lg border border-dark-500/50 text-white"
+        size="xs"
+        @click="setPreviousMonth" />
+      <UButton
+        icon="i-heroicons-chevron-right"
+        color="white"
+        variant="soft"
+        class="rounded-lg border border-dark-500/50 text-white"
+        size="xs"
+        :disabled="isFutureDate(selectedYear, selectedMonth + 1, 1)"
+        @click="setNextMonth" />
+    </div>
     <CalendarGrid
       :month-days="monthDays"
       :selected-month="selectedMonth"
@@ -16,11 +33,12 @@
 <script setup lang="ts">
 import CalendarFilters from './components/CalendarFilters.vue';
 import CalendarGrid from './components/CalendarGrid.vue';
-import type { CalendarProps } from './Calendar.interfaces';
+import { type AvailableBoe } from './Calendar.interfaces';
+import { type Database } from '~/types/supabase';
+
+const client = useSupabaseClient<Database>();
 
 const emits = defineEmits(['set-selected-date']);
-
-const { boesList } = defineProps<CalendarProps>();
 
 const route = useRoute();
 
@@ -30,9 +48,10 @@ const year = dateParam.split('-')[0];
 
 const selectedMonth = ref(Number(month));
 const selectedYear = ref(Number(year));
+const boesList = ref<AvailableBoe[]>([]);
 
 const availableBoeListByDates = computed(
-  () => boesList?.map(({ date, url }) => ({ date, url })) ?? [],
+  () => boesList.value.map(({ date, url }) => ({ date, url })) ?? [],
 );
 
 const monthDays = computed(() => {
@@ -77,4 +96,17 @@ const setNextMonth = () => {
     selectedMonth.value++;
   }
 };
+
+const getAllBoes = async () => {
+  const { data, error } = await client.from('boes').select('date, url');
+  if (error) {
+    console.error('Error getting all BOEs:', error);
+    return;
+  }
+  boesList.value = data;
+};
+
+onMounted(async () => {
+  await getAllBoes();
+});
 </script>
