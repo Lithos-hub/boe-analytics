@@ -10,9 +10,24 @@ export class SupabaseServices implements BoeRepository {
   async getAllBoes(): Promise<{ date: string }[]> {
     const { data, error } = await this.client.from('boes').select('date');
     if (error) {
-      throw new Error(`Error obteniendo BOEs: ${error.message}`);
+      throw new Error(`Error when getting all BOEs: ${error.message}`);
     }
     return data || [];
+  }
+
+  async checkBoeAlreadyExists(date: string): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('boes')
+      .select('date')
+      .eq('date', date);
+
+    if (error) {
+      throw new Error(
+        `Error when checking if BOE already exists: ${error.message}`,
+      );
+    }
+
+    return !!data?.length;
   }
 
   async saveAndReturnBoeId({
@@ -31,7 +46,29 @@ export class SupabaseServices implements BoeRepository {
       .single<Boe>();
 
     if (error) {
-      throw new Error(`Error creando BOE: ${error.message}`);
+      throw new Error(`Error saving BOE in database: ${error.message}`);
+    }
+
+    return data?.id ?? null;
+  }
+
+  async updateAndReturnBoeId({
+    date,
+    url,
+    summary,
+  }: BoePostData): Promise<number | null> {
+    const { data, error } = await this.client
+      .from('boes')
+      .update({
+        url,
+        summary,
+      })
+      .match({ date })
+      .select()
+      .single<Boe>();
+
+    if (error) {
+      throw new Error(`Error updating BOE in database: ${error.message}`);
     }
 
     return data?.id ?? null;
@@ -47,7 +84,7 @@ export class SupabaseServices implements BoeRepository {
     );
 
     if (error) {
-      console.error('Error saving areas:', error);
+      console.error('Error saving areas in database:', error);
       throw error;
     }
   }
@@ -60,7 +97,7 @@ export class SupabaseServices implements BoeRepository {
     );
 
     if (error) {
-      console.error('Error saving main points:', error);
+      console.error('Error saving main points in database:', error);
       throw error;
     }
   }
@@ -74,7 +111,7 @@ export class SupabaseServices implements BoeRepository {
     );
 
     if (error) {
-      console.error('Error saving keywords:', error);
+      console.error('Error saving keywords in database:', error);
       throw error;
     }
   }
@@ -90,6 +127,7 @@ export class SupabaseServices implements BoeRepository {
     const { error } = await this.client
       .from('aspects')
       .insert(formattedAspects);
-    if (error) throw new Error(`Error guardando aspectos: ${error.message}`);
+    if (error)
+      throw new Error(`Error guardando aspectos in database: ${error.message}`);
   }
 }
