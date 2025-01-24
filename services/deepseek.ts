@@ -1,21 +1,19 @@
-export class DeepSeekServices {
-    private inputText: string
+import { TextChunkService } from "./textChunk";
 
-    constructor(inputText: string) {
-        this.inputText = inputText
-    }
+export class TextChunkManager {
+  private textChunkService: TextChunkService;
 
-    async processText(url: string) {
-        try {
-            return await $fetch<string>(url, {
-              method: 'POST',
-              body: {
-                text: this.inputText,
-              },
-            });
-          } catch (error) {
-            console.error('Error generating summary:', error);
-            throw error;
-          }
-    }
+  constructor() {
+    this.textChunkService = new TextChunkService();
+  }
+
+  async processLargeText(text: string, processor: (chunk: string) => Promise<any>): Promise<any[]> {
+    const chunks = this.textChunkService.splitIntoChunks(text);
+    const results = await Promise.all(chunks.map(processor));
+    return this.mergeResults(results);
+  }
+
+  private mergeResults(results: any[]): any[] {
+    return results.flat();
+  }
 }
