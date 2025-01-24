@@ -63,12 +63,7 @@
             <Loader
               v-else
               class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              :status-messages="[
-                'Accediendo al documento...',
-                'Extrayendo información...',
-                'Generando resumen...',
-                'Guardando en base de datos...',
-              ]" />
+              :status-messages="loadingSummaryMessages" />
           </Card>
         </article>
       </section>
@@ -102,12 +97,7 @@
             <Loader
               v-else
               class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-              :status-messages="[
-                'Accediendo al documento...',
-                'Extrayendo información...',
-                'Generando estadísticas...',
-                'Guardando en base de datos...',
-              ]" />
+              :status-messages="loadingAspectsMessages" />
           </Card>
         </article>
       </section>
@@ -192,10 +182,76 @@ interface GenerateTask {
 
 // Consts
 const client = useSupabaseClient<Database>();
-
 const route = useRoute();
-
 const formattedDate = formatDateToLocaleString(route.params.date as string);
+
+const loadingSummaryMessages = [
+  'Accediendo al documento...',
+  'Extrayendo información...',
+  'Generando resumen...',
+  'Guardando en base de datos...',
+];
+
+const loadingAspectsMessages = [
+  'Accediendo al documento...',
+  'Extrayendo información...',
+  'Generando aspectos...',
+  'Guardando en base de datos...',
+];
+
+// Meta
+useHead({
+  title: `BOE del ${formattedDate} - BOE Analytics`,
+  meta: [
+    {
+      name: 'description',
+      content: `Análisis del BOE publicado a fecha de ${formattedDate}. Consulta un resumen breve del documento además de palabras clave; puntos principales; aspectos positivos, negativos y neutros y las distintas áreas en relación con el documento.`,
+    },
+    {
+      property: 'og:title',
+      content: `BOE del ${formattedDate} - BOE Analytics`,
+    },
+    {
+      property: 'og:description',
+      content: `Análisis del BOE publicado a fecha de ${formattedDate}. Consulta un resumen breve del documento además de palabras clave; puntos principales; aspectos positivos, negativos y neutros y las distintas áreas en relación con el documento.`,
+    },
+    {
+      property: 'keywords',
+      content:
+        'BOE, análisis del BOE, BOE de España, Boletín Oficial del Estado, Inteligencia Artificial, DeepSeek, OpenAI, BOE resumido, Análisis del BOE',
+    },
+    {
+      // TODO: Change this to the actual URL
+      property: 'og:url',
+      content: `https://www.example/${route.params.date}`,
+    },
+    {
+      name: 'viewport',
+      content: 'width=device-width, initial-scale=1',
+    },
+    {
+      name: 'robots',
+      content: 'index, follow',
+    },
+    {
+      name: 'twitter:card',
+      content: 'summary_large_image',
+    },
+    {
+      name: 'twitter:title',
+      content: `BOE del ${formattedDate} - BOE Analytics`,
+    },
+    {
+      name: 'twitter:description',
+      content: `Análisis del BOE publicado a fecha de ${formattedDate}. Consulta un resumen breve del documento además de palabras clave; puntos principales; aspectos positivos, negativos y neutros y las distintas áreas en relación con el documento.`,
+    },
+    // TODO: Change this to the actual image
+    {
+      name: 'twitter:image',
+      content: 'https://www.example.com/path/to/image.jpg',
+    },
+  ],
+});
 
 // Composables
 const { scrapData, isLoadingScrap, scrapUrl } = useScraper();
@@ -208,6 +264,7 @@ const boeUrl = ref<string>('');
 const boeId = ref<number | null>(null);
 
 const showJSON = ref(false);
+const showCopiedText = ref(false);
 
 const isLoadingSummary = ref(true);
 const isLoadingMainPoints = ref(true);
@@ -215,14 +272,11 @@ const isLoadingKeywords = ref(true);
 const isLoadingAreas = ref(true);
 const isLoadingAspects = ref(true);
 
-const showCopiedText = ref(false);
-
 const summary = ref<string>('');
 const mainPoints = ref<string[]>([]);
 const keywords = ref<string[]>([]);
 const areas = ref<Area[]>([]);
 const aspects = ref<Aspect[]>([]);
-
 const boesList = ref<AvailableBoe[]>([]);
 
 // Computed
@@ -287,7 +341,6 @@ const boeAnalysisJSON = computed(() =>
 );
 
 // Methods
-
 const downloadPDF = () => {
   console.log('downloadPDF');
 };
