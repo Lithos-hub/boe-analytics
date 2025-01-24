@@ -174,7 +174,7 @@ import type {
   Keyword,
   MainPoint,
 } from '~/models/boe';
-import { SupabaseServices } from '~/services/supabase';
+import { SupabaseServices } from '@/services/supabase';
 import type { Database } from '~/types/supabase';
 
 interface Stats {
@@ -312,13 +312,24 @@ const copyToClipboard = (text: string) => {
 
 const postBoe = async (_summary: string) => {
   try {
-    const postedBoeId = await supabaseServices.saveAndReturnBoeId({
-      date: route.params.date as string,
-      url: scrapData.value?.url ?? '',
-      summary: _summary,
-    });
+    const boeAlreadyExists = await supabaseServices.checkBoeAlreadyExists(
+      route.params.date as string,
+    );
 
-    boeId.value = postedBoeId ?? null;
+    if (boeAlreadyExists) {
+      boeId.value = await supabaseServices.updateAndReturnBoeId({
+        date: route.params.date as string,
+        url: scrapData.value?.url ?? '',
+        summary: _summary,
+      });
+    } else {
+      boeId.value = await supabaseServices.saveAndReturnBoeId({
+        date: route.params.date as string,
+        url: scrapData.value?.url ?? '',
+        summary: _summary,
+      });
+    }
+
     summary.value = _summary;
   } catch (error) {
     console.error('Error saving boe:', error);
@@ -490,33 +501,34 @@ const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
       }
     }
   }
-
-  await getAllBoes();
 };
 
 const getBoeData = async () => {
+  const dateFromParams = route.params.date as string;
   try {
     initializeLoadingStates();
-    await scrapUrl(route.params.date as string);
 
-    const { data: boeData } = await client
-      .from('boes')
-      .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
-      .eq('date', route.params.date)
-      .single<BoeResponse>();
+    const [_, { data: boeData }] = await Promise.all([
+      scrapUrl(dateFromParams),
+      client
+        .from('boes')
+        .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
+        .eq('date', dateFromParams)
+        .single<BoeResponse>(),
+    ]);
 
-    if (boeData) setBoeData(boeData);
-    await generateAndPostMissingData(boeData);
+    if (boeData) {
+      setBoeData(boeData);
+      await generateAndPostMissingData(boeData);
+    }
   } catch (error) {
     console.error('Error in getBoeData:', error);
 
     if ((error as { statusCode: number }).statusCode === 404) {
-      // Post BOE with empty URL and empty summary
       await postBoe('');
     }
   } finally {
-    await getAllBoes();
-    resetLoadingStates();
+    await Promise.all([getAllBoes(), resetLoadingStates()]);
   }
 };
 
