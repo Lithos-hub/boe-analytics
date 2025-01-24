@@ -17,7 +17,7 @@
     <div
       class="flex items-center justify-center p-5"
       v-else-if="isLoadingAreas">
-      <Loader :status-messages="['Generando áreas afectadas...']" />
+      <Loader :status-messages="loadingAreasMessages" />
     </div>
     <p class="text-red-500" v-else>No se ha podido generar la información.</p>
   </div>
@@ -27,6 +27,13 @@
 import type { AreasProps } from './Areas.interfaces';
 
 defineProps<AreasProps>();
+
+const loadingAreasMessages = [
+  'Accediendo al documento...',
+  'Extrayendo información...',
+  'Generando áreas...',
+  'Guardando en base de datos...',
+];
 </script>
 
 <style lang="scss" scoped>

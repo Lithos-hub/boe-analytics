@@ -10,7 +10,7 @@
     <div
       class="flex items-center justify-center p-5"
       v-else-if="isLoadingMainPoints">
-      <Loader :status-messages="['Generando puntos principales...']" />
+      <Loader :status-messages="loadingMainPointsMessages" />
     </div>
     <p class="text-red-500" v-else>No se ha podido generar la información.</p>
   </div>
@@ -20,6 +20,13 @@
 import type { MainPointsProps } from './MainPoints.interfaces';
 
 defineProps<MainPointsProps>();
+
+const loadingMainPointsMessages = [
+  'Accediendo al documento...',
+  'Extrayendo información...',
+  'Generando puntos clave...',
+  'Guardando en base de datos...',
+];
 </script>
 
 <style lang="scss" scoped>
