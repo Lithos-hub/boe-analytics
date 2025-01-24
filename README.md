@@ -27,9 +27,8 @@ SUPABASE_KEY=your-supabase-key
 
 ## Features
 
-- [x] Generation of a summary and brief statistics of the BOE for the current date in the "Home" section, or root route `/`.
-- [x] Generation of a detailed analysis of the BOE for a specific date in the route `/boe/:date`.
-- [x] Query a BOE from the calendar.
+- [x] Generation of summary, stats, positive/negative/neutral aspects, main points, affected areas and keywords.
+- [x] Calendar integration to navigate through the BOEs using dynamic route.
 - [x] Backend integration with Supabase.
 
 ## Setup
