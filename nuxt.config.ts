@@ -3,7 +3,7 @@
 import { getCurrentDate } from './utils/dates';
 
 export default defineNuxtConfig({
-  modules: ['@nuxt/ui', '@nuxt/eslint', '@nuxtjs/supabase'],
+  modules: ['@nuxt/ui', '@nuxt/eslint', '@nuxtjs/supabase', '@pinia/nuxt'],
   devtools: { enabled: true },
   // When the user is on the home page, must be redirected to /:current-date route
   routeRules: {
