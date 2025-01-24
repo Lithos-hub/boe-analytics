@@ -13,7 +13,7 @@
           :to="`/${dateRaw}`"
           active-class="text-primary font-bold underline underline-offset-4"
           inactive-class="text-gray-500">
-          Análisis
+          BOE de hoy
         </ULink>
         <ULink
           to="/about"

@@ -6,7 +6,9 @@
       <li v-for="{ aspect, description } in aspects" :key="aspect">
         <div class="flex flex-col gap-2 py-5">
           <strong class="flex items-center gap-2">
-            <UIcon name="i-heroicons-x-circle" class="h-6 w-6" />
+            <UIcon
+              :name="`i-heroicons-${type === 'negative' ? 'x-circle' : type === 'positive' ? 'check-circle' : 'minus-circle'}`"
+              class="h-6 w-6" />
             {{ aspect }}
           </strong>
           <p>{{ description }}</p>
