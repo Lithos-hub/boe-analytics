@@ -1,7 +1,6 @@
 <template>
   <div v-if="stats">
-    <small>Aspectos positivos, negativos y neutros del boletín:</small>
-    <div class="h-auto py-5">
+    <div class="h-[200px]">
       <Pie :data :options />
     </div>
   </div>
@@ -29,7 +28,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const props = defineProps<StatsProps>();
 
 const data: ChartData<'pie'> = {
-  labels: ['Positivo', 'Negativo', 'Neutral'],
+  labels: ['Aspectos positivos', 'Aspectos negativos', 'Aspectos neutrales'],
   datasets: [
     {
       label: 'Cantidad',
@@ -56,7 +55,7 @@ const options: ChartOptions<'pie'> = {
           size: 10,
         },
       },
-      position: 'top',
+      position: 'left',
     },
   },
 };

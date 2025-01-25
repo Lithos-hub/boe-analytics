@@ -71,11 +71,9 @@ import type { CalendarGridProps } from './CalendarGrid.interfaces';
 const { monthDays, selectedYear, selectedMonth, availableBoesList } =
   defineProps<CalendarGridProps>();
 
-const emits = defineEmits(['set-previous-month', 'set-next-month']);
-
 const route = useRoute();
 
-const selectedDate = route.params.date as string;
+const selectedDate = computed(() => route.params.date as string);
 
 const availableBoesByDate = (_date: string) => {
   return availableBoesList.map(({ date }) => date).includes(_date);

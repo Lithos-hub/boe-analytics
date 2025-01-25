@@ -1,7 +1,6 @@
 <template>
   <div class="flex">
-    <nav
-      class="sticky left-0 top-0 flex h-screen w-[300px] flex-col gap-2.5 py-2.5 pl-2.5">
+    <nav class="flex w-[300px] min-w-[300px] flex-col gap-2.5 py-2.5 pl-2.5">
       <div class="rounded-2xl bg-dark-950/50 p-5 backdrop-blur-sm">
         <Calendar />
       </div>
@@ -40,8 +39,9 @@
         </div>
       </div>
     </nav>
-    <div class="h-full flex-1 p-2.5">
-      <div class="rounded-2xl bg-dark-950/50 p-5 backdrop-blur-sm">
+    <div class="flex-1 p-2.5">
+      <div
+        class="max-h-[calc(100vh-95px)] overflow-y-scroll rounded-2xl bg-dark-950/50 p-5 backdrop-blur-sm">
         <slot />
       </div>
     </div>

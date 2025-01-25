@@ -11,7 +11,7 @@
         <Loader v-else-if="isLoadingScrap" />
       </div>
     </header>
-    <div class="Home__wrapper" v-if="!showJSON">
+    <div class="Home__wrapper" v-if="!isShowingJSON">
       <section class="Home__summary">
         <article>
           <Card class="Home__summary--card" title="Resumen">
@@ -42,13 +42,6 @@
           </Card>
         </article>
       </section>
-      <section class="Home__areas">
-        <article>
-          <Card class="Home__areas--card" title="Áreas">
-            <BoeAreas :areas :is-loading-areas="isLoadingAreas" />
-          </Card>
-        </article>
-      </section>
       <section class="Home__stats">
         <article>
           <Card class="Home__stats--card" title="Estadísticas">
@@ -57,6 +50,13 @@
               v-else
               class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
               :status-messages="loadingAspectsMessages" />
+          </Card>
+        </article>
+      </section>
+      <section class="Home__areas">
+        <article>
+          <Card class="Home__areas--card" title="Áreas">
+            <BoeAreas :areas :is-loading-areas="isLoadingAreas" />
           </Card>
         </article>
       </section>
@@ -91,10 +91,10 @@
         </article>
       </section>
     </div>
-    <div v-else class="relative">
+    <div v-else class="relative max-w-[calc(100vw-400px)]">
       <pre
         class="overflow-x-auto rounded-2xl bg-dark-950/40 p-5 text-green-500"
-        >{{ boeAnalysisJSON }}</pre
+        >{{ boeJSON }}</pre
       >
       <!-- Button to copy JSON to clipboard -->
       <div
@@ -103,7 +103,7 @@
           color="green"
           variant="soft"
           icon="i-heroicons-clipboard-document-list"
-          @click="copyToClipboard(boeAnalysisJSON)" />
+          @click="copyToClipboard(boeJSON)" />
         <div
           class="rounded-full bg-dark-950/50 px-2 py-1 text-center"
           v-if="showCopiedText">
@@ -115,7 +115,6 @@
 </template>
 
 <script setup lang="ts">
-import type { AvailableBoe } from '~/components/Calendar/Calendar.interfaces';
 import type {
   Area,
   Aspect,
@@ -149,6 +148,8 @@ const {
   positiveAspects,
   negativeAspects,
   neutralAspects,
+  isShowingJSON,
+  boeJSON,
 } = storeToRefs(useBoeStore());
 
 // Consts
@@ -239,7 +240,6 @@ const supabaseServices = new SupabaseServices();
 const boeUrl = ref<string>('');
 const boeId = ref<number | null>(null);
 
-const showJSON = ref(false);
 const showCopiedText = ref(false);
 
 const isLoadingSummary = ref(true);
@@ -286,23 +286,7 @@ const stats = computed(() => {
     : null;
 });
 
-const boeAnalysisJSON = computed(() =>
-  JSON.stringify(
-    {
-      'puntos principales': mainPoints.value,
-      'palabras clave': keywords.value,
-      'áreas afectadas': areas.value,
-      'aspectos a destacar': aspects.value,
-    },
-    null,
-    2,
-  ),
-);
-
 // Methods
-const downloadPDF = () => {
-  console.log('downloadPDF');
-};
 const copyToClipboard = (text: string) => {
   navigator.clipboard.writeText(text);
   showCopiedText.value = true;
@@ -534,10 +518,8 @@ const getBoeData = async () => {
   }
 };
 
-onMounted(() => {
-  Promise.all([getBoeData()]).catch((error) => {
-    console.error('Initial loading error:', error);
-  });
+onMounted(async () => {
+  await getBoeData();
 });
 </script>
 
@@ -549,69 +531,51 @@ onMounted(() => {
     @apply grid grid-cols-12 gap-5;
   }
 
+  &__calendar--card,
+  &__summary--card,
+  &__mainPoints--card,
+  &__keywords--card,
+  &__areas--card,
+  &__stats--card,
+  &__aspects--card {
+    @apply h-[350px] max-h-[350px] overflow-y-auto;
+  }
+
   &__calendar {
     @apply col-span-12 md:col-span-6 2xl:col-span-4;
-
-    &--card {
-      @apply min-h-[400px];
-    }
   }
 
   &__summary {
-    @apply col-span-12 md:col-span-6 2xl:col-span-4;
-
-    &--card {
-      @apply h-full min-h-[400px];
-    }
+    @apply col-span-12 md:col-span-6;
   }
 
   &__mainPoints {
-    @apply col-span-12 md:col-span-6 2xl:col-span-4;
-
-    &--card {
-      @apply h-full min-h-[400px];
-    }
+    @apply col-span-12 md:col-span-6;
   }
 
   &__keywords {
-    @apply col-span-12 md:col-span-6 2xl:col-span-4;
-
-    &--card {
-      @apply h-full min-h-[400px];
-    }
+    @apply col-span-12 md:col-span-6;
   }
 
   &__areas {
-    @apply col-span-12 md:col-span-6 2xl:col-span-4;
-
-    &--card {
-      @apply h-full min-h-[400px];
-    }
+    @apply col-span-12;
   }
 
   &__stats {
-    @apply col-span-12 md:col-span-6 2xl:col-span-4;
-
-    &--card {
-      @apply h-full min-h-[400px];
-    }
+    @apply col-span-12 md:col-span-6;
   }
 
   &__aspects {
-    &--card {
-      @apply h-full min-h-[400px];
-    }
-
     &--positive {
-      @apply col-span-12 2xl:col-span-4;
+      @apply col-span-12;
     }
 
     &--negative {
-      @apply col-span-12 2xl:col-span-4;
+      @apply col-span-12;
     }
 
     &--neutral {
-      @apply col-span-12 2xl:col-span-4;
+      @apply col-span-12;
     }
   }
 }

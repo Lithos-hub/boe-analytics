@@ -1,11 +1,8 @@
 <template>
   <div class="text-white/80">
-    <!-- <Navbar />
-    <Container class="max-h-[calc(100vh-56px)] overflow-y-auto">
-      <div class="p-5">
-        <NuxtPage />
-      </div>
-    </Container> -->
+    <div class="px-2.5 pt-2.5">
+      <Navbar />
+    </div>
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

@@ -24,9 +24,7 @@
       :month-days="monthDays"
       :selected-month="selectedMonth"
       :selected-year="selectedYear"
-      :available-boes-list="availableBoeListByDates"
-      @set-previous-month="setPreviousMonth"
-      @set-next-month="setNextMonth" />
+      :available-boes-list="availableBoeListByDates" />
   </div>
 </template>
 

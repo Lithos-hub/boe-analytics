@@ -2,7 +2,6 @@ import type { Area, Aspect, Keyword, MainPoint } from '~/models/boe';
 
 export const useBoeStore = defineStore('boe', () => {
   const boeUrl = ref(null);
-  const boeJSON = ref(null);
 
   const isShowingJSON = ref(false);
 
@@ -20,6 +19,19 @@ export const useBoeStore = defineStore('boe', () => {
   );
   const neutralAspects = computed(
     () => aspects.value?.filter(({ type }) => type === 'neutral') ?? [],
+  );
+
+  const boeJSON = computed(() =>
+    JSON.stringify(
+      {
+        'puntos principales': mainPoints.value,
+        'palabras clave': keywords.value,
+        'áreas afectadas': areas.value,
+        'aspectos a destacar': aspects.value,
+      },
+      null,
+      2,
+    ),
   );
 
   return {
