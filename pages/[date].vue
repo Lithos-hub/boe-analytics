@@ -1,11 +1,12 @@
 <template>
   <div class="flex flex-col gap-5">
-    <header class="flex items-center justify-between">
-      <h2 class="text-white">BOE del {{ formattedDate }}</h2>
-
-      <div class="relative col-span-12 mx-auto md:ml-auto xl:col-span-4">
+    <header class="Home__header">
+      <h2 class="Home__title">BOE del {{ formattedDate }}</h2>
+      <div class="relative">
         <FeedbackMessage
-          v-if="wordsCountAmountMessage && !isLoadingScrap"
+          v-if="
+            wordsCountAmountMessage && !isLoadingScrap && thereIsSomeMissingData
+          "
           :message="wordsCountAmountMessage"
           :type="wordsCountAmountLevel" />
         <Loader v-else-if="isLoadingScrap" />
@@ -115,14 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import type {
-  Area,
-  Aspect,
-  BoeResponse,
-  Keyword,
-  MainPoint,
-} from '~/models/boe';
-import { SupabaseServices } from '@/services/supabase';
+import type { BoeResponse } from '~/models/boe';
 import type { Database } from '~/types/supabase';
 
 interface Stats {
@@ -139,6 +133,8 @@ interface GenerateTask {
 }
 
 // Pinia
+const boeStore = useBoeStore();
+
 const {
   summary,
   mainPoints,
@@ -150,7 +146,27 @@ const {
   neutralAspects,
   isShowingJSON,
   boeJSON,
-} = storeToRefs(useBoeStore());
+  scrapData,
+  isLoadingScrap,
+  wordsCountAmountMessage,
+  wordsCountAmountLevel,
+  selectedMonth,
+  selectedYear,
+  boeUrl,
+  boeId,
+  thereIsSomeMissingData,
+} = storeToRefs(boeStore);
+
+const {
+  postBoe,
+  postAspects,
+  postKeywords,
+  postAreas,
+  postMainPoints,
+  getAllBoes,
+  scrapUrl,
+  $resetBoeData,
+} = boeStore;
 
 // Consts
 const client = useSupabaseClient<Database>();
@@ -230,16 +246,7 @@ useHead({
   ],
 });
 
-// Composables
-const { scrapData, isLoadingScrap, scrapUrl } = useScraper();
-
-// Instances
-const supabaseServices = new SupabaseServices();
-
 // State
-const boeUrl = ref<string>('');
-const boeId = ref<number | null>(null);
-
 const showCopiedText = ref(false);
 
 const isLoadingSummary = ref(true);
@@ -249,30 +256,6 @@ const isLoadingAreas = ref(true);
 const isLoadingAspects = ref(true);
 
 // Computed
-const wordsCount = computed(
-  () => scrapData.value?.text?.split(' ').length ?? 0,
-);
-
-const wordsCountAmountLevel = computed(() => {
-  if (wordsCount.value < 1000) return 'info';
-  if (wordsCount.value >= 1000 && wordsCount.value < 15000) return 'warning';
-  if (wordsCount.value >= 15000) return 'error';
-  else return 'info';
-});
-
-const wordsCountAmountMessage = computed(() => {
-  if (!wordsCount.value) return '';
-
-  const count = wordsCount.value;
-  if (wordsCountAmountLevel.value === 'info')
-    return `El documento contiene aproximadamente ${count} palabras.`;
-  if (wordsCountAmountLevel.value === 'warning')
-    return `El documento contiene aproximadamente ${count} palabras. El análisis puede tardar algo más de lo normal.`;
-  if (wordsCountAmountLevel.value === 'error')
-    return `El documento contiene un gran número de palabras, aproximadamente ${count}. Puede que se demore el análisis varios minutos.`;
-  return '';
-});
-
 const stats = computed(() => {
   return aspects.value?.length
     ? aspects.value?.reduce(
@@ -296,84 +279,6 @@ const copyToClipboard = (text: string) => {
   }, 2000);
 };
 
-const postBoe = async (_summary: string) => {
-  try {
-    const boeAlreadyExists = await supabaseServices.checkBoeAlreadyExists(
-      route.params.date as string,
-    );
-
-    if (boeAlreadyExists) {
-      boeId.value = await supabaseServices.updateAndReturnBoeId({
-        date: route.params.date as string,
-        url: scrapData.value?.url ?? '',
-        summary: _summary,
-      });
-    } else {
-      boeId.value = await supabaseServices.saveAndReturnBoeId({
-        date: route.params.date as string,
-        url: scrapData.value?.url ?? '',
-        summary: _summary,
-      });
-    }
-
-    summary.value = _summary;
-  } catch (error) {
-    console.error('Error saving boe:', error);
-    throw error;
-  }
-};
-
-const postAspects = async (_aspects: Aspect[]) => {
-  if (!boeId.value) return;
-  try {
-    await supabaseServices.saveAspects(_aspects, boeId.value);
-    aspects.value = _aspects.map(({ aspect, type, description }) => ({
-      aspect,
-      type,
-      description,
-    }));
-  } catch (error) {
-    console.error('Error saving aspects:', error);
-    throw error;
-  }
-};
-
-const postKeywords = async (_keywords: Keyword[]) => {
-  if (!boeId.value) return;
-  try {
-    await supabaseServices.saveKeywords(_keywords, boeId.value);
-    keywords.value = _keywords.map(({ keyword }) => keyword);
-  } catch (error) {
-    console.error('Error saving keywords:', error);
-    throw error;
-  }
-};
-
-const postAreas = async (_areas: Area[]) => {
-  if (!boeId.value) return;
-  try {
-    await supabaseServices.saveAreas(_areas, boeId.value);
-    areas.value = _areas.map(({ name, description }) => ({
-      name,
-      description,
-    }));
-  } catch (error) {
-    console.error('Error saving areas:', error);
-    throw error;
-  }
-};
-
-const postMainPoints = async (_mainPoints: MainPoint[]) => {
-  if (!boeId.value) return;
-  try {
-    await supabaseServices.saveMainPoints(_mainPoints, boeId.value);
-    mainPoints.value = _mainPoints.map(({ point }) => point);
-  } catch (error) {
-    console.error('Error saving main points:', error);
-    throw error;
-  }
-};
-
 const initializeLoadingStates = () => {
   isLoadingSummary.value = true;
   isLoadingMainPoints.value = true;
@@ -390,7 +295,9 @@ const resetLoadingStates = () => {
   isLoadingAspects.value = false;
 };
 
-const setBoeData = (boeData: BoeResponse) => {
+const setBoeData = (boeData: BoeResponse | null) => {
+  if (!boeData) return;
+
   const dataMappers = {
     basic: () => {
       if (boeData?.id && boeData?.url) {
@@ -442,16 +349,17 @@ const setBoeData = (boeData: BoeResponse) => {
   Object.values(dataMappers).forEach((mapper) => mapper());
 };
 
-const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
+const generateAndPostMissingData = async (boeData: any) => {
   const text = scrapData.value?.text ?? '';
 
+  // If the BOE doesn't exist, we generate the summary and POST the BOE in the database
+  if (!boeData || !boeData?.summary) {
+    const summary = await generateSummary(text);
+    await postBoe(summary as string);
+    isLoadingSummary.value = false;
+  }
+
   const generateTasks: GenerateTask[] = [
-    {
-      condition: !boeData || !boeData?.summary,
-      generate: () => generateSummary(text),
-      post: postBoe,
-      loadingState: () => (isLoadingSummary.value = false),
-    },
     {
       condition: !mainPoints.value?.length,
       generate: () => generateMainPoints(text),
@@ -478,15 +386,17 @@ const generateAndPostMissingData = async (boeData: BoeResponse | null) => {
     },
   ];
 
-  for (const task of generateTasks) {
-    if (task.condition) {
+  const postPromises = generateTasks
+    .filter((task) => task.condition)
+    .map(async (task) => {
       const data = await task.generate();
       if (data) {
         await task.post(data);
         task.loadingState();
       }
-    }
-  }
+    });
+
+  await Promise.all(postPromises);
 };
 
 const getBoeData = async () => {
@@ -494,19 +404,16 @@ const getBoeData = async () => {
   try {
     initializeLoadingStates();
 
-    const [_, { data: boeData }] = await Promise.all([
-      scrapUrl(dateFromParams),
-      client
-        .from('boes')
-        .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
-        .eq('date', dateFromParams)
-        .single<BoeResponse>(),
-    ]);
+    await scrapUrl(dateFromParams);
 
-    if (boeData) {
-      setBoeData(boeData);
-      await generateAndPostMissingData(boeData);
-    }
+    const { data: boeData } = await client
+      .from('boes')
+      .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
+      .eq('date', dateFromParams)
+      .single<BoeResponse>();
+
+    setBoeData(boeData);
+    await generateAndPostMissingData(boeData);
   } catch (error) {
     console.error('Error in getBoeData:', error);
 
@@ -514,12 +421,24 @@ const getBoeData = async () => {
       await postBoe('');
     }
   } finally {
+    await getAllBoes();
     resetLoadingStates();
   }
 };
 
 onMounted(async () => {
-  await getBoeData();
+  $resetBoeData();
+
+  selectedMonth.value = Number((route.params.date as string).split('-')[1]);
+  selectedYear.value = Number((route.params.date as string).split('-')[0]);
+
+  await Promise.all([getBoeData(), getAllBoes()]).catch((error) =>
+    console.error('Error when initializate [date].vue:', error),
+  );
+});
+
+watch(route, () => {
+  $resetBoeData();
 });
 </script>
 
@@ -527,18 +446,14 @@ onMounted(async () => {
 @use '@/assets/scss/text.scss' as *;
 
 .Home {
+  &__header {
+    @apply flex flex-col items-center justify-center gap-5;
+  }
+  &__title {
+    @apply text-lg font-bold text-primary-500 xl:text-3xl;
+  }
   &__wrapper {
     @apply grid grid-cols-12 gap-5;
-  }
-
-  &__calendar--card,
-  &__summary--card,
-  &__mainPoints--card,
-  &__keywords--card,
-  &__areas--card,
-  &__stats--card,
-  &__aspects--card {
-    @apply h-[350px] max-h-[350px] overflow-y-auto;
   }
 
   &__calendar {
@@ -546,15 +461,15 @@ onMounted(async () => {
   }
 
   &__summary {
-    @apply col-span-12 md:col-span-6;
+    @apply col-span-12 xl:col-span-6;
   }
 
   &__mainPoints {
-    @apply col-span-12 md:col-span-6;
+    @apply col-span-12 xl:col-span-6;
   }
 
   &__keywords {
-    @apply col-span-12 md:col-span-6;
+    @apply col-span-12 xl:col-span-6;
   }
 
   &__areas {
@@ -562,20 +477,20 @@ onMounted(async () => {
   }
 
   &__stats {
-    @apply col-span-12 md:col-span-6;
+    @apply col-span-12 xl:col-span-6;
   }
 
   &__aspects {
     &--positive {
-      @apply col-span-12;
+      @apply col-span-12 xl:col-span-4;
     }
 
     &--negative {
-      @apply col-span-12;
+      @apply col-span-12 xl:col-span-4;
     }
 
     &--neutral {
-      @apply col-span-12;
+      @apply col-span-12 xl:col-span-4;
     }
   }
 }
