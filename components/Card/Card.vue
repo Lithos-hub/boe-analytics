@@ -1,11 +1,11 @@
 <template>
   <div class="Card">
-    <div v-if="title">
-      <strong class="text-primary">{{ title }}</strong>
-
-      <hr class="border-primary/10 my-5 border" />
+    <header v-if="title" class="Card__header">
+      <strong class="Card__header--title">{{ title }}</strong>
+    </header>
+    <div class="Card__content">
+      <slot />
     </div>
-    <slot />
   </div>
 </template>
 
@@ -17,6 +17,18 @@ defineProps<CardProps>();
 
 <style scoped lang="scss">
 .Card {
-  @apply border-primary/10 rounded-lg border-2 bg-gradient-to-tl from-transparent to-primary-500/10 p-5 shadow-xl backdrop-blur;
+  @apply border-primary/10 rounded-lg border-2 bg-gradient-to-tl from-transparent to-primary-500/10 shadow-xl backdrop-blur;
+
+  &__header {
+    @apply flex flex-col items-center justify-center gap-2.5 border-b border-b-primary-500/10 bg-[#161420];
+
+    &--title {
+      @apply text-primary p-2.5 text-center font-bold;
+    }
+  }
+
+  &__content {
+    @apply h-[350px] max-h-[450px] overflow-y-auto p-5;
+  }
 }
 </style>

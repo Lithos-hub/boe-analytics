@@ -31,22 +31,10 @@
 <script setup lang="ts">
 import CalendarFilters from './components/CalendarFilters.vue';
 import CalendarGrid from './components/CalendarGrid.vue';
-import { type AvailableBoe } from './Calendar.interfaces';
-import { type Database } from '~/types/supabase';
-
-const client = useSupabaseClient<Database>();
 
 const emits = defineEmits(['set-selected-date']);
 
-const route = useRoute();
-
-const dateParam = route.params.date as string;
-const month = dateParam.split('-')[1];
-const year = dateParam.split('-')[0];
-
-const selectedMonth = ref(Number(month));
-const selectedYear = ref(Number(year));
-const boesList = ref<AvailableBoe[]>([]);
+const { boesList, selectedMonth, selectedYear } = storeToRefs(useBoeStore());
 
 const availableBoeListByDates = computed(
   () => boesList.value.map(({ date, url }) => ({ date, url })) ?? [],
@@ -94,17 +82,4 @@ const setNextMonth = () => {
     selectedMonth.value++;
   }
 };
-
-const getAllBoes = async () => {
-  const { data, error } = await client.from('boes').select('date, url');
-  if (error) {
-    console.error('Error getting all BOEs:', error);
-    return;
-  }
-  boesList.value = data;
-};
-
-onMounted(async () => {
-  await getAllBoes();
-});
 </script>

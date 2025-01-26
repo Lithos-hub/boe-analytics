@@ -2,15 +2,17 @@
   <div>
     <ul
       v-if="!isLoadingAspects && aspects && aspects.length"
-      :class="`BoeAspects--${type}`">
+      :class="['BoeAspects__list', `BoeAspects__list--${type}`]">
       <li v-for="{ aspect, description } in aspects" :key="aspect">
-        <div class="flex flex-col gap-2 py-5">
-          <strong class="flex items-center gap-2">
+        <div class="flex flex-col gap-5">
+          <div class="flex items-center gap-2.5 self-stretch">
             <UIcon
               :name="`i-heroicons-${type === 'negative' ? 'x-circle' : type === 'positive' ? 'check-circle' : 'minus-circle'}`"
-              class="h-6 w-6" />
-            {{ aspect }}
-          </strong>
+              class="h-6 min-h-6 w-6 min-w-6" />
+            <strong class="flex items-center gap-2">
+              {{ aspect }}
+            </strong>
+          </div>
           <p>{{ description }}</p>
         </div>
       </li>
@@ -43,38 +45,26 @@ const noAspectsMessage = {
 </script>
 
 <style lang="scss" scoped>
-li strong {
-  @apply min-w-[400px];
+@mixin AspectItem {
+  @apply my-5 rounded border p-2.5;
 }
 
-@mixin BoeAspectHeading {
-  @apply my-0 bg-transparent pt-0 font-bold;
-}
+.BoeAspects__list {
+  @apply flex flex-col gap-5;
 
-.BoeAspects--positive {
-  @apply my-5 rounded border border-green-500 bg-green-500/10 p-5 text-green-200;
-
-  h2 {
-    @include BoeAspectHeading;
-    @apply text-green-500;
+  &--positive {
+    @include AspectItem;
+    @apply border-green-500/50 bg-green-500/10 text-green-200;
   }
-}
 
-.BoeAspects--negative {
-  @apply my-5 rounded border border-red-500 bg-red-500/10 p-5 text-red-200;
-
-  h2 {
-    @include BoeAspectHeading;
-    @apply text-red-500;
+  &--negative {
+    @include AspectItem;
+    @apply border-red-500/50 bg-red-500/10 text-red-200;
   }
-}
 
-.BoeAspects--neutral {
-  @apply my-5 rounded border border-slate-400 bg-slate-400/10 p-5 text-slate-200;
-
-  h2 {
-    @include BoeAspectHeading;
-    @apply text-slate-500;
+  &--neutral {
+    @include AspectItem;
+    @apply border-gray-500/50 bg-gray-500/10 text-slate-200;
   }
 }
 </style>

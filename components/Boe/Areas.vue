@@ -40,7 +40,7 @@ const loadingAreasMessages = [
 .BoeAnalytics {
   &__areas {
     ul {
-      @apply grid grid-cols-6 gap-5;
+      @apply grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-6;
     }
 
     .BoeAnalytics__area-item-card {

@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full w-full">
+  <div class="h-[280px] w-full">
     <div class="grid grid-cols-7 gap-1">
       <small
         v-for="day in weekDaysShort"
