@@ -12,22 +12,25 @@ export const getMainPoints = async (text: string) => {
             role: 'system',
             content: `Se te proporcionará un texto relativo al Boletín Oficial del Estado de España. Debes identificar los puntos principales del texto.
         
-        Debes devolver un array de objetos con las siguientes propiedades:
-          - point: string (punto principal)
+            Debes devolver una cadena de texto con los puntos claves separados por tres guiones.
 
-        Devuelve solo el array, no incluyas comillas ni comentarios, simplemente devuelve el array empezando y acabando con [ y ].
-        Ten en cuenta que el resultado será procesado con un JSON.parse, por lo que no incluyas comillas en el array.
-
-        Ejemplo de salida: ["punto1", "punto2", "punto3"]
+        Ejemplo de salida: "punto clave 1--- punto clave 2--- punto clave 3--- punto clave 4"
         
         Texto a analizar: ${chunk}`,
           },
         ],
         model: 'deepseek-chat',
       });
-      return JSON.parse(response.choices[0].message.content || '[]');
+      return response.choices[0].message.content?.split('---').map((point) => {
+        return {
+          point: point.trim().replace(/"/g, ''),
+        };
+      });
     },
   );
 
-  return [...new Set(results.flat())].join('');
+  debugger;
+
+  const uniquePoints = [...new Set(results.flat())];
+  return JSON.stringify(uniquePoints);
 };

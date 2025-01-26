@@ -31,7 +31,12 @@ export const getAnalysisPoints = async (text: string) => {
         ],
         model: 'deepseek-chat',
       });
-      return JSON.parse(response.choices[0].message.content || '[]');
+      const stringify = JSON.stringify(
+        response.choices[0].message.content,
+        null,
+        2,
+      );
+      return JSON.parse(stringify || '[]');
     },
   );
 

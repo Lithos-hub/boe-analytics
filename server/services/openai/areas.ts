@@ -21,16 +21,21 @@ export const getAreas = async (text: string) => {
 
         Ten en cuenta que el resultado será procesado con un JSON.parse, por lo que no incluyas comillas en el array.
 
-        Ejemplo de salida: [{"name": "Educación", "description": "La medida afecta a la educación"}, {"name": "Trabajo", "description": "La medida afecta al trabajo"}]
+        Ejemplo de salida: [{"name": "Educación", "description": "Descripción de la medida"}, {"name": "Trabajo", "description": "Descripción de la medida"}]
           
         Texto a analizar: ${chunk}`,
           },
         ],
         model: 'deepseek-chat',
       });
-      return JSON.parse(response.choices[0].message.content || '[]');
+      const stringify = JSON.stringify(
+        response.choices[0].message.content,
+        null,
+        2,
+      );
+      return JSON.parse(stringify || '[]');
     },
   );
 
-  return [...new Set(results.flat())].join('');
+  return results.flat();
 };
