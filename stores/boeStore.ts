@@ -47,11 +47,11 @@ export const useBoeStore = defineStore('boe', () => {
 
     const count = wordsCount.value;
     if (wordsCountAmountLevel.value === 'info')
-      return `El documento contiene aproximadamente ${count} palabras.`;
+      return `El documento es pequeño y contiene aproximadamente ${count} palabras.`;
     if (wordsCountAmountLevel.value === 'warning')
-      return `El documento contiene aproximadamente ${count} palabras. El análisis puede tardar algo más de lo normal.`;
+      return `El documento es de tamaño considerable y contiene aproximadamente ${count} palabras.`;
     if (wordsCountAmountLevel.value === 'error')
-      return `El documento contiene un gran número de palabras, aproximadamente ${count}. Puede que se demore el análisis varios minutos.`;
+      return `El documento contiene un gran número de palabras, aproximadamente ${count}.`;
     return '';
   });
 
@@ -65,14 +65,32 @@ export const useBoeStore = defineStore('boe', () => {
     () => aspects.value?.filter(({ type }) => type === 'neutral') ?? [],
   );
 
-  const thereIsSomeMissingData = computed(
-    () =>
-      !mainPoints.value.length ||
-      !areas.value.length ||
-      !keywords.value.length ||
-      !aspects.value.length ||
-      !summary.value,
-  );
+  const missingData = computed(() => {
+    return boeUrl.value
+      ? [
+          {
+            section: 'Resumen',
+            data: summary.value,
+          },
+          {
+            section: 'Puntos principales',
+            data: mainPoints.value,
+          },
+          {
+            section: 'Palabras clave',
+            data: keywords.value,
+          },
+          {
+            section: 'Áreas afectadas',
+            data: areas.value,
+          },
+          {
+            section: 'Aspectos a destacar y estadísticas',
+            data: aspects.value,
+          },
+        ].filter(({ data }) => !data.length)
+      : [];
+  });
 
   const boeJSON = computed(() =>
     JSON.stringify(
@@ -89,7 +107,9 @@ export const useBoeStore = defineStore('boe', () => {
 
   const scrapUrl = async (endpoint: string) => {
     try {
-      scrapData.value = await $fetch(`api/scrap/${endpoint}`);
+      const data = (await $fetch(`api/scrap/${endpoint}`)) as ScrapResponse;
+      scrapData.value = data;
+      boeUrl.value = data.url;
     } catch (error) {
       console.error(`Error scraping url: api/scrap/${endpoint}`, error);
       throw error;
@@ -218,12 +238,12 @@ export const useBoeStore = defineStore('boe', () => {
     wordsCount,
     wordsCountAmountLevel,
     wordsCountAmountMessage,
+    missingData,
     scrapData,
     isLoadingScrap,
     scrapUrl,
     selectedMonth,
     selectedYear,
-    thereIsSomeMissingData,
     $resetBoeData,
   };
 });

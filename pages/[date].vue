@@ -4,12 +4,22 @@
       <h2 class="Home__title">BOE del {{ formattedDate }}</h2>
       <div class="relative">
         <FeedbackMessage
-          v-if="
-            wordsCountAmountMessage && !isLoadingScrap && thereIsSomeMissingData
-          "
+          v-if="wordsCountAmountMessage && !isLoadingScrap"
           :message="wordsCountAmountMessage"
           :type="wordsCountAmountLevel" />
         <Loader v-else-if="isLoadingScrap" />
+      </div>
+      <div v-if="!isLoadingScrap && missingData.length" class="flex gap-2.5">
+        <strong class="text-xs text-cyan-500">
+          Los siguientes apartados están siendo procesados:
+        </strong>
+        <ul class="flex flex-wrap gap-2.5">
+          <li v-for="{ section } in missingData" :key="section">
+            <UBadge class="animate-pulse" color="blue" variant="soft">
+              {{ section }}
+            </UBadge>
+          </li>
+        </ul>
       </div>
     </header>
     <div class="Home__wrapper" v-if="!isShowingJSON">
@@ -148,13 +158,13 @@ const {
   boeJSON,
   scrapData,
   isLoadingScrap,
+  missingData,
   wordsCountAmountMessage,
   wordsCountAmountLevel,
   selectedMonth,
   selectedYear,
   boeUrl,
   boeId,
-  thereIsSomeMissingData,
 } = storeToRefs(boeStore);
 
 const {
