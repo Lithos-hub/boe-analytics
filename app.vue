@@ -1,5 +1,6 @@
 <template>
   <div class="text-white/80">
+    <Modal />
     <div class="px-2.5 pt-2.5">
       <Navbar />
     </div>
