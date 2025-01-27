@@ -12,12 +12,12 @@
       <div
         v-if="!isLoadingScrap && missingData.length && isLoadingAnalysis"
         class="flex gap-2.5">
-        <strong class="text-xs text-cyan-500">
+        <strong class="text-xs text-primary-500">
           Los siguientes apartados están siendo procesados:
         </strong>
         <ul class="flex flex-wrap gap-2.5">
           <li v-for="{ section } in missingData" :key="section">
-            <UBadge class="animate-pulse" color="blue" variant="soft">
+            <UBadge class="animate-pulse" color="primary" variant="soft">
               {{ section }}
             </UBadge>
           </li>
