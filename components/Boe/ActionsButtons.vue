@@ -28,7 +28,7 @@
       icon="i-heroicons-arrow-down-tray"
       disabled
       @click="downloadPDF">
-      Descargar PDF (Soon)
+      Descargar PDF
     </UButton>
   </div>
 </template>

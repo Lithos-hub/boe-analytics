@@ -31,33 +31,37 @@
     </nav>
   </header>
   <USlideover v-model="isShowingMenu">
-    <div class="flex-1 p-4">
-      <UButton
-        color="gray"
-        variant="ghost"
-        icon="i-heroicons-x-mark-20-solid"
-        class="absolute end-5 top-5 z-10 flex sm:hidden"
-        square
-        padded
-        @click="closeMenu" />
-    </div>
-    <div class="flex h-full flex-col items-center justify-center gap-5">
-      <ULink
-        :to="`/${dateRaw}`"
-        active-class="text-primary font-bold underline underline-offset-4"
-        inactive-class="text-gray-500">
-        BOE de hoy
-      </ULink>
-      <ULink
-        to="/about"
-        active-class="text-primary font-bold underline underline-offset-4"
-        inactive-class="text-gray-500">
-        Sobre el proyecto
-      </ULink>
-    </div>
-    <div class="p-5 pb-10">
-      <Calendar />
-      <BoeActionsButtons />
+    <div class="flex h-full flex-col justify-between gap-5">
+      <div class="p-4">
+        <UButton
+          color="gray"
+          variant="ghost"
+          icon="i-heroicons-x-mark-20-solid"
+          class="absolute end-5 top-5 z-10 flex sm:hidden"
+          square
+          padded
+          @click="closeMenu" />
+      </div>
+      <div class="flex flex-col items-center justify-center gap-5">
+        <ULink
+          :to="`/${dateRaw}`"
+          active-class="text-primary font-bold underline underline-offset-4"
+          inactive-class="text-gray-500">
+          BOE de hoy
+        </ULink>
+        <ULink
+          to="/about"
+          active-class="text-primary font-bold underline underline-offset-4"
+          inactive-class="text-gray-500">
+          Sobre el proyecto
+        </ULink>
+      </div>
+      <div class="p-5">
+        <Calendar />
+      </div>
+      <div class="p-5">
+        <BoeActionsButtons />
+      </div>
     </div>
   </USlideover>
 </template>
