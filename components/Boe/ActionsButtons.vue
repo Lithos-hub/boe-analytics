@@ -55,11 +55,11 @@ const downloadPDF = async () => {
   let yPosition = height - margin;
 
   const drawTextBlock = (
-    title,
-    content,
-    fontSizeTitle,
-    fontSizeContent,
-    spacing,
+    title: string,
+    content: string,
+    fontSizeTitle: number,
+    fontSizeContent: number,
+    spacing: number,
   ) => {
     page.drawText(title, {
       x: margin,
