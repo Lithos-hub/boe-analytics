@@ -9,7 +9,9 @@
           :type="wordsCountAmountLevel" />
         <Loader v-else-if="isLoadingScrap" />
       </div>
-      <div v-if="!isLoadingScrap && missingData.length" class="flex gap-2.5">
+      <div
+        v-if="!isLoadingScrap && missingData.length && isLoadingAnalysis"
+        class="flex gap-2.5">
         <strong class="text-xs text-cyan-500">
           Los siguientes apartados están siendo procesados:
         </strong>
@@ -126,9 +128,6 @@
 </template>
 
 <script setup lang="ts">
-import type { BoeResponse } from '~/models/boe';
-import type { Database } from '~/types/supabase';
-
 interface Stats {
   positive: number;
   negative: number;
@@ -156,7 +155,6 @@ const {
   neutralAspects,
   isShowingJSON,
   boeJSON,
-  scrapData,
   isLoadingScrap,
   missingData,
   wordsCountAmountMessage,
@@ -164,22 +162,17 @@ const {
   selectedMonth,
   selectedYear,
   boeUrl,
-  boeId,
+  isLoadingAreas,
+  isLoadingAspects,
+  isLoadingKeywords,
+  isLoadingMainPoints,
+  isLoadingSummary,
+  isLoadingAnalysis,
 } = storeToRefs(boeStore);
 
-const {
-  postBoe,
-  postAspects,
-  postKeywords,
-  postAreas,
-  postMainPoints,
-  getAllBoes,
-  scrapUrl,
-  $resetBoeData,
-} = boeStore;
+const { getAllBoes, $resetBoeData, getBoeData } = boeStore;
 
 // Consts
-const client = useSupabaseClient<Database>();
 const route = useRoute();
 const formattedDate = formatDateToLocaleString(route.params.date as string);
 
@@ -258,13 +251,6 @@ useHead({
 
 // State
 const showCopiedText = ref(false);
-
-const isLoadingSummary = ref(true);
-const isLoadingMainPoints = ref(true);
-const isLoadingKeywords = ref(true);
-const isLoadingAreas = ref(true);
-const isLoadingAspects = ref(true);
-
 // Computed
 const stats = computed(() => {
   return aspects.value?.length
@@ -287,153 +273,6 @@ const copyToClipboard = (text: string) => {
   setTimeout(() => {
     showCopiedText.value = false;
   }, 2000);
-};
-
-const initializeLoadingStates = () => {
-  isLoadingSummary.value = true;
-  isLoadingMainPoints.value = true;
-  isLoadingKeywords.value = true;
-  isLoadingAreas.value = true;
-  isLoadingAspects.value = true;
-};
-
-const resetLoadingStates = () => {
-  isLoadingSummary.value = false;
-  isLoadingMainPoints.value = false;
-  isLoadingKeywords.value = false;
-  isLoadingAreas.value = false;
-  isLoadingAspects.value = false;
-};
-
-const setBoeData = (boeData: BoeResponse | null) => {
-  if (!boeData) return;
-
-  const dataMappers = {
-    basic: () => {
-      if (boeData?.id && boeData?.url) {
-        boeId.value = boeData.id;
-        boeUrl.value = boeData.url;
-      }
-    },
-    summary: () => {
-      if (boeData?.summary) {
-        summary.value = boeData.summary;
-        isLoadingSummary.value = false;
-      }
-    },
-    areas: () => {
-      if (boeData?.areas?.length) {
-        areas.value = boeData.areas.map(({ name, description }) => ({
-          name,
-          description,
-        }));
-        isLoadingAreas.value = false;
-      }
-    },
-    mainPoints: () => {
-      if (boeData?.main_points?.length) {
-        mainPoints.value = boeData.main_points.map(({ point }) => point);
-        isLoadingMainPoints.value = false;
-      }
-    },
-    keywords: () => {
-      if (boeData?.keywords?.length) {
-        keywords.value = boeData.keywords.map(({ keyword }) => keyword);
-        isLoadingKeywords.value = false;
-      }
-    },
-    aspects: () => {
-      if (boeData?.aspects?.length) {
-        aspects.value = boeData.aspects.map(
-          ({ aspect, type, description }) => ({
-            aspect,
-            type,
-            description,
-          }),
-        );
-        isLoadingAspects.value = false;
-      }
-    },
-  };
-
-  Object.values(dataMappers).forEach((mapper) => mapper());
-};
-
-const generateAndPostMissingData = async (boeData: any) => {
-  const text = scrapData.value?.text ?? '';
-
-  // If the BOE doesn't exist, we generate the summary and POST the BOE in the database
-  if (!boeData || !boeData?.summary) {
-    const summary = await generateSummary(text);
-    await postBoe(summary as string);
-    isLoadingSummary.value = false;
-  }
-
-  const generateTasks: GenerateTask[] = [
-    {
-      condition: !mainPoints.value?.length,
-      generate: () => generateMainPoints(text),
-      post: postMainPoints,
-      loadingState: () => (isLoadingMainPoints.value = false),
-    },
-    {
-      condition: !keywords.value?.length,
-      generate: () => generateKeywords(text),
-      post: postKeywords,
-      loadingState: () => (isLoadingKeywords.value = false),
-    },
-    {
-      condition: !areas.value?.length,
-      generate: () => generateAreas(text),
-      post: postAreas,
-      loadingState: () => (isLoadingAreas.value = false),
-    },
-    {
-      condition: !aspects.value?.length,
-      generate: () => generateAspects(text),
-      post: postAspects,
-      loadingState: () => (isLoadingAspects.value = false),
-    },
-  ];
-
-  const postPromises = generateTasks
-    .filter((task) => task.condition)
-    .map(async (task) => {
-      const data = await task.generate();
-      if (data) {
-        await task.post(data);
-        task.loadingState();
-      }
-    });
-
-  await Promise.all(postPromises);
-};
-
-const getBoeData = async () => {
-  const dateFromParams = route.params.date as string;
-  try {
-    initializeLoadingStates();
-
-    await scrapUrl(dateFromParams);
-
-    const { data: boeData } = await client
-      .from('boes')
-      .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
-      .eq('date', dateFromParams)
-      .single<BoeResponse>();
-
-    setBoeData(boeData);
-    await generateAndPostMissingData(boeData);
-  } catch (error) {
-    console.error('Error in getBoeData:', error);
-
-    if ((error as { statusCode: number }).statusCode === 404) {
-      await postBoe('');
-    }
-  } finally {
-    await getAllBoes();
-    resetLoadingStates();
-  }
 };
 
 onMounted(async () => {

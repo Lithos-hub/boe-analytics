@@ -1,10 +1,20 @@
 import type { AvailableBoe } from '~/components/Calendar/Calendar.interfaces';
-import type { Area, Aspect, Keyword, MainPoint } from '~/models/boe';
+import type {
+  Area,
+  Aspect,
+  BoeResponse,
+  Keyword,
+  MainPoint,
+} from '~/models/boe';
 import type { ScrapResponse } from '~/server/api/scrap/scrap.interfaces';
 import { SupabaseServices } from '~/services/supabase';
 import type { Database } from '~/types/supabase';
+import type { GenerateTask } from './boeStore.interfaces';
 
 export const useBoeStore = defineStore('boe', () => {
+  const abortController = new AbortController();
+  const abortSignal = abortController.signal;
+
   // Consts
   const supabaseServices = new SupabaseServices();
   const client = useSupabaseClient<Database>();
@@ -12,7 +22,14 @@ export const useBoeStore = defineStore('boe', () => {
 
   // State
   const scrapData = ref<ScrapResponse | null>(null);
+
   const isLoadingScrap = ref(true);
+  const isLoadingAnalysis = ref(false);
+  const isLoadingSummary = ref(true);
+  const isLoadingMainPoints = ref(true);
+  const isLoadingKeywords = ref(true);
+  const isLoadingAreas = ref(true);
+  const isLoadingAspects = ref(true);
 
   const boeId = ref<number | null>(null);
   const boeUrl = ref<string>('');
@@ -127,6 +144,156 @@ export const useBoeStore = defineStore('boe', () => {
     boesList.value = data;
   };
 
+  const initializeLoadingStates = () => {
+    isLoadingSummary.value = true;
+    isLoadingMainPoints.value = true;
+    isLoadingKeywords.value = true;
+    isLoadingAreas.value = true;
+    isLoadingAspects.value = true;
+  };
+
+  const resetLoadingStates = () => {
+    isLoadingSummary.value = false;
+    isLoadingMainPoints.value = false;
+    isLoadingKeywords.value = false;
+    isLoadingAreas.value = false;
+    isLoadingAspects.value = false;
+  };
+
+  const setBoeData = (boeData: BoeResponse | null) => {
+    if (!boeData) return;
+
+    const dataMappers = {
+      basic: () => {
+        if (boeData?.id && boeData?.url) {
+          boeId.value = boeData.id;
+          boeUrl.value = boeData.url;
+        }
+      },
+      summary: () => {
+        if (boeData?.summary) {
+          summary.value = boeData.summary;
+          isLoadingSummary.value = false;
+        }
+      },
+      areas: () => {
+        if (boeData?.areas?.length) {
+          areas.value = boeData.areas.map(({ name, description }) => ({
+            name,
+            description,
+          }));
+          isLoadingAreas.value = false;
+        }
+      },
+      mainPoints: () => {
+        if (boeData?.main_points?.length) {
+          mainPoints.value = boeData.main_points.map(({ point }) => point);
+          isLoadingMainPoints.value = false;
+        }
+      },
+      keywords: () => {
+        if (boeData?.keywords?.length) {
+          keywords.value = boeData.keywords.map(({ keyword }) => keyword);
+          isLoadingKeywords.value = false;
+        }
+      },
+      aspects: () => {
+        if (boeData?.aspects?.length) {
+          aspects.value = boeData.aspects.map(
+            ({ aspect, type, description }) => ({
+              aspect,
+              type,
+              description,
+            }),
+          );
+          isLoadingAspects.value = false;
+        }
+      },
+    };
+
+    Object.values(dataMappers).forEach((mapper) => mapper());
+  };
+
+  const generateAndPostMissingData = async (boeData: any) => {
+    const text = scrapData.value?.text ?? '';
+
+    // If the BOE doesn't exist, we generate the summary and POST the BOE in the database
+    if (!boeData || !boeData?.summary) {
+      const summary = await generateSummary(text);
+      await postBoe(summary as string);
+      isLoadingSummary.value = false;
+    }
+
+    const generateTasks: GenerateTask[] = [
+      {
+        condition: !mainPoints.value?.length,
+        generate: () => generateMainPoints(text, abortSignal),
+        post: postMainPoints,
+        loadingState: () => (isLoadingMainPoints.value = false),
+      },
+      {
+        condition: !keywords.value?.length,
+        generate: () => generateKeywords(text, abortSignal),
+        post: postKeywords,
+        loadingState: () => (isLoadingKeywords.value = false),
+      },
+      {
+        condition: !areas.value?.length,
+        generate: () => generateAreas(text, abortSignal),
+        post: postAreas,
+        loadingState: () => (isLoadingAreas.value = false),
+      },
+      {
+        condition: !aspects.value?.length,
+        generate: () => generateAspects(text, abortSignal),
+        post: postAspects,
+        loadingState: () => (isLoadingAspects.value = false),
+      },
+    ];
+
+    const postPromises = generateTasks
+      .filter((task) => task.condition)
+      .map(async (task) => {
+        const data = await task.generate();
+        if (data) {
+          await task.post(data);
+          task.loadingState();
+        }
+      });
+
+    await Promise.all(postPromises);
+  };
+
+  const getBoeData = async () => {
+    isLoadingAnalysis.value = true;
+    const dateFromParams = route.params.date as string;
+    try {
+      initializeLoadingStates();
+
+      await scrapUrl(dateFromParams);
+
+      const { data: boeData } = await client
+        .from('boes')
+        .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
+        .eq('date', dateFromParams)
+        .single<BoeResponse>();
+
+      setBoeData(boeData);
+      await generateAndPostMissingData(boeData);
+      isLoadingAnalysis.value = false;
+    } catch (error) {
+      console.error('Error in getBoeData:', error);
+
+      if ((error as { statusCode: number }).statusCode === 404) {
+        await postBoe('');
+      }
+    } finally {
+      await getAllBoes();
+      resetLoadingStates();
+      isLoadingAnalysis.value = false;
+    }
+  };
+
   const postBoe = async (_summary: string) => {
     try {
       const boeAlreadyExists = await supabaseServices.checkBoeAlreadyExists(
@@ -204,6 +371,11 @@ export const useBoeStore = defineStore('boe', () => {
     }
   };
 
+  const stopAnalysis = () => {
+    abortController.abort('Analysis stopped by user');
+    isLoadingAnalysis.value = false;
+  };
+
   const $resetBoeData = () => {
     scrapData.value = null;
     boeId.value = null;
@@ -244,6 +416,15 @@ export const useBoeStore = defineStore('boe', () => {
     scrapUrl,
     selectedMonth,
     selectedYear,
+    isLoadingAnalysis,
+    stopAnalysis,
+    abortController,
     $resetBoeData,
+    isLoadingAreas,
+    isLoadingAspects,
+    isLoadingKeywords,
+    isLoadingMainPoints,
+    isLoadingSummary,
+    getBoeData,
   };
 });
