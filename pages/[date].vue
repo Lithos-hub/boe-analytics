@@ -134,13 +134,6 @@ interface Stats {
   neutral: number;
 }
 
-interface GenerateTask {
-  condition: boolean;
-  generate: () => Promise<any>;
-  post: (data: any) => Promise<void>;
-  loadingState: () => void;
-}
-
 // Pinia
 const boeStore = useBoeStore();
 
