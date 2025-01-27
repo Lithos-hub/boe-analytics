@@ -1,6 +1,6 @@
 <template>
   <div class="grid grid-cols-12 gap-2.5">
-    <div class="col-span-12 md:col-span-6">
+    <div class="col-span-6">
       <label class="text-primary font-bold">Mes</label>
       <USelectMenu
         v-model="selectedMonthModel"
@@ -9,7 +9,7 @@
         option-attribute="name"
         value-attribute="id" />
     </div>
-    <div class="col-span-12 md:col-span-6">
+    <div class="col-span-6">
       <label class="text-primary font-bold">Año</label>
       <USelectMenu
         v-model="selectedYearModel"

@@ -55,6 +55,10 @@
         Sobre el proyecto
       </ULink>
     </div>
+    <div class="p-5 pb-10">
+      <Calendar />
+      <BoeActionsButtons />
+    </div>
   </USlideover>
 </template>
 
