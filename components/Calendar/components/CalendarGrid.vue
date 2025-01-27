@@ -13,7 +13,7 @@
         :key="day"
         class="CalendarGrid__cell CalendarGrid__empty-cell" />
 
-      <NuxtLink
+      <div
         v-for="day in monthDays.days"
         :key="day"
         :class="[
@@ -34,7 +34,7 @@
             ),
           },
         ]"
-        :to="`/${formatDate(selectedYear, selectedMonth, day)}`">
+        @click="handleDayCellClick(day)">
         <small class="absolute left-1 top-1 text-xs">
           {{ day }}
         </small>
@@ -54,7 +54,7 @@
               ),
             }" />
         </div>
-      </NuxtLink>
+      </div>
 
       <div
         v-for="day in monthDays.lastDay"
@@ -72,6 +72,10 @@ const { monthDays, selectedYear, selectedMonth, availableBoesList } =
   defineProps<CalendarGridProps>();
 
 const route = useRoute();
+const router = useRouter();
+
+const { showModal } = useModalStore();
+const { isLoadingAnalysis } = storeToRefs(useBoeStore());
 
 const selectedDate = computed(() => route.params.date as string);
 
@@ -85,6 +89,17 @@ const availableBoesByDateAndUrl = (_date: string) => {
 
 const availableBoesByDateAndNoUrl = (_date: string) => {
   return availableBoesList.some(({ date, url }) => date === _date && !url);
+};
+
+const handleDayCellClick = (day: number) => {
+  if (isFutureDate(selectedYear, selectedMonth, day)) return;
+
+  if (isLoadingAnalysis.value) {
+    showModal('StopFetch');
+    return;
+  }
+
+  router.push({ path: formatDate(selectedYear, selectedMonth, day) });
 };
 </script>
 
