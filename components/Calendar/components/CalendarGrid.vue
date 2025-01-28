@@ -125,11 +125,11 @@ const handleDayCellClick = (day: number) => {
     }
 
     &--today {
-      @apply border-2 border-primary-500/50;
+      @apply border border-primary-500/50;
     }
 
     &--selected {
-      @apply border-2 border-cyan-500/50 bg-cyan-500/20 text-cyan-200;
+      @apply border border-cyan-500/50 bg-cyan-500/20 text-cyan-200;
     }
   }
 

@@ -6,16 +6,16 @@
     <div class="flex items-center justify-center gap-5">
       <UButton
         icon="i-heroicons-chevron-left"
-        color="white"
+        color="primary"
         variant="soft"
-        class="rounded-lg border border-dark-500/50 text-white"
+        class="text-primary rounded-lg"
         size="xs"
         @click="setPreviousMonth" />
       <UButton
         icon="i-heroicons-chevron-right"
-        color="white"
+        color="primary"
         variant="soft"
-        class="rounded-lg border border-dark-500/50 text-white"
+        class="text-primary rounded-lg"
         size="xs"
         :disabled="isFutureDate(selectedYear, selectedMonth + 1, 1)"
         @click="setNextMonth" />
