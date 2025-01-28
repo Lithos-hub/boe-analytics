@@ -2,8 +2,23 @@
   <div class="About">
     <img
       src="/logo-big.png"
-      class="absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 opacity-10" />
-    <div class="grid grid-cols-2 items-center justify-center gap-y-40 p-5">
+      class="absolute left-1/2 top-1/2 h-[700px] w-[700px] -translate-x-1/2 -translate-y-1/2 object-cover opacity-10" />
+    <section class="flex flex-col items-center justify-center gap-5">
+      <h3 class="w-1/2 text-center text-2xl">
+        Conocer y entender las leyes y medidas que se aplican a diario en el
+        Boletín Oficial del Estado no es solo un derecho que tenemos como
+        ciudadanos, sino también una obligación.
+      </h3>
+      <h3 class="w-1/2 text-center text-2xl">
+        Muchos de estos documentos son extremadamente largos y complejos, lo que
+        dificulta su lectura y comprensión. Es ahí donde entra en juego
+      </h3>
+      <h3
+        class="from-primary bg-gradient-to-br to-green-500 bg-clip-text text-[80px] font-bold text-transparent">
+        Boe Analytics
+      </h3>
+    </section>
+    <section class="About__section-explanation">
       <h3 class="About__title">¿Qué es BOE Analytics?</h3>
       <div class="About__description">
         <p>
@@ -11,10 +26,15 @@
           <strong>de código abierto</strong>
           y
           <strong>sin ánimo de lucro</strong>
-          que permite a los usuarios analizar y visualizar los datos de los
-          Boletines Oficiales del Estado de España. La aplicación se basa en la
-          extracción de datos de los documentos web de los boletines oficiales y
-          su posterior procesamiento con
+          que permite a los usuarios
+          <strong>analizar</strong>
+          y
+          <strong>visualizar</strong>
+          los datos de los
+          <strong>Boletines Oficiales del Estado</strong>
+          de España. La aplicación se basa en la extracción de datos de los
+          documentos web de los boletines oficiales y su posterior procesamiento
+          con
           <strong>LLM</strong>
           (Large Language Models) para su análisis y visualización.
         </p>
@@ -25,6 +45,8 @@
           , un potente proyecto de Inteligencia Artificial de código abierto.
         </p>
       </div>
+    </section>
+    <section class="About__section-explanation">
       <h3 class="About__title">¿Qué hace?</h3>
       <div class="About__description">
         <p>
@@ -38,7 +60,7 @@
             Resumen de unos pocos párrafos del BOE.
           </li>
           <li class="About__list-item">
-            <strong>Puntos principales:</strong>
+            <strong>Puntos claves del boletín:</strong>
             Lista de los puntos más relevantes del documento.
           </li>
           <li class="About__list-item">
@@ -57,12 +79,14 @@
             afecta cada uno.
           </li>
           <li class="About__list-item">
-            <strong>Aspectos a destacar:</strong>
+            <strong>Aspectos positivos, negativos y neutros:</strong>
             Detalle más extenso de los aspectos positivos, negativos y neutrales
             del documento junto a una descripción breve de cada uno.
           </li>
         </ul>
       </div>
+    </section>
+    <section class="About__section-explanation">
       <h3 class="About__title">¿Cómo funciona?</h3>
       <div class="About__description">
         <p>
@@ -100,7 +124,7 @@
           </ul>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -112,7 +136,7 @@ definePageMeta({
 
 <style lang="scss" scoped>
 .About {
-  @apply relative flex flex-col items-center justify-center gap-5 py-20;
+  @apply relative h-[calc(100vh-150px)] snap-y snap-proximity;
   p {
     @apply text-center text-lg text-primary-200 md:text-left;
 
@@ -135,6 +159,14 @@ definePageMeta({
     strong {
       @apply text-primary-500;
     }
+  }
+
+  section {
+    @apply h-[calc(100vh-150px)] snap-center;
+  }
+
+  &__section-explanation {
+    @apply grid grid-cols-2 items-center justify-center;
   }
 }
 </style>
