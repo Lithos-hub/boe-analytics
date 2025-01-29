@@ -9,11 +9,11 @@ import type {
 import type { ScrapResponse } from '~/server/api/scrap/scrap.interfaces';
 import { SupabaseServices } from '~/services/supabase';
 import type { Database } from '~/types/supabase';
-import type { GenerateTask } from './boeStore.interfaces';
+import type { GenerateTask, SectionToReGenerate } from './boeStore.interfaces';
 
 export const useBoeStore = defineStore('boe', () => {
-  const abortController = new AbortController();
-  const abortSignal = abortController.signal;
+  let abortFetchController: AbortController | null = null;
+  let abortScrapController: AbortController | null = null;
 
   // Consts
   const supabaseServices = new SupabaseServices();
@@ -24,15 +24,14 @@ export const useBoeStore = defineStore('boe', () => {
   const scrapData = ref<ScrapResponse | null>(null);
 
   const isLoadingScrap = ref(true);
-  const isLoadingAnalysis = ref(false);
-  const isLoadingSummary = ref(true);
-  const isLoadingMainPoints = ref(true);
-  const isLoadingKeywords = ref(true);
-  const isLoadingAreas = ref(true);
-  const isLoadingAspects = ref(true);
+
+  const isLoadingSummary = ref(false);
+  const isLoadingMainPoints = ref(false);
+  const isLoadingKeywords = ref(false);
+  const isLoadingAreas = ref(false);
+  const isLoadingAspects = ref(false);
 
   const boeId = ref<number | null>(null);
-  const boeUrl = ref<string>('');
 
   const isShowingJSON = ref(false);
 
@@ -47,9 +46,41 @@ export const useBoeStore = defineStore('boe', () => {
   const selectedMonth = ref<number>(new Date().getMonth() + 1);
   const selectedYear = ref<number>(new Date().getFullYear());
 
+  const selectedDocumentToAnalyze = ref<AvailableScrapedBoe>();
+
   // Computed
+  const isLoadingAnalysis = computed(() => {
+    return (
+      isLoadingSummary.value ||
+      isLoadingMainPoints.value ||
+      isLoadingKeywords.value ||
+      isLoadingAreas.value ||
+      isLoadingAspects.value
+    );
+  });
+
+  const availableScrapedBoeDocuments = computed<AvailableScrapedBoe[]>(() =>
+    scrapData.value
+      ? Object.keys(scrapData.value).map((key) => {
+          if (!scrapData.value) {
+            return {
+              id: '',
+              url: '',
+              title: '',
+              subtitle: '',
+              text: '',
+            };
+          }
+          return {
+            id: key,
+            ...scrapData.value[key],
+          };
+        })
+      : [],
+  );
+
   const wordsCount = computed(
-    () => scrapData.value?.text?.split(' ').length ?? 0,
+    () => selectedDocumentToAnalyze.value?.text?.split(' ').length ?? 0,
   );
 
   const wordsCountAmountLevel = computed(() => {
@@ -83,7 +114,7 @@ export const useBoeStore = defineStore('boe', () => {
   );
 
   const missingData = computed(() => {
-    return boeUrl.value
+    return selectedDocumentToAnalyze.value && isLoadingAnalysis.value
       ? [
           {
             section: 'Resumen',
@@ -112,6 +143,7 @@ export const useBoeStore = defineStore('boe', () => {
   const boeJSON = computed(() =>
     JSON.stringify(
       {
+        resumen: summary.value,
         'puntos principales': mainPoints.value,
         'palabras clave': keywords.value,
         'áreas afectadas': areas.value,
@@ -123,15 +155,23 @@ export const useBoeStore = defineStore('boe', () => {
   );
 
   const scrapUrl = async (endpoint: string) => {
+    isLoadingScrap.value = true;
+    console.error('Scraping...');
     try {
-      const data = (await $fetch(`api/scrap/${endpoint}`)) as ScrapResponse;
+      if (abortScrapController) {
+        abortScrapController.abort();
+      }
+      abortScrapController = null;
+      abortScrapController = new AbortController();
+
+      const data = (await $fetch(`api/scrap/${endpoint}`, {
+        signal: abortScrapController.signal,
+      })) as ScrapResponse;
       scrapData.value = data;
-      boeUrl.value = data.url;
+      isLoadingScrap.value = false;
     } catch (error) {
       console.error(`Error scraping url: api/scrap/${endpoint}`, error);
       throw error;
-    } finally {
-      isLoadingScrap.value = false;
     }
   };
 
@@ -167,7 +207,6 @@ export const useBoeStore = defineStore('boe', () => {
       basic: () => {
         if (boeData?.id && boeData?.url) {
           boeId.value = boeData.id;
-          boeUrl.value = boeData.url;
         }
       },
       summary: () => {
@@ -214,8 +253,98 @@ export const useBoeStore = defineStore('boe', () => {
     Object.values(dataMappers).forEach((mapper) => mapper());
   };
 
-  const generateAndPostMissingData = async (boeData: any) => {
-    const text = scrapData.value?.text ?? '';
+  const getAndPostSummary = async (text: string) => {
+    try {
+      isLoadingSummary.value = true;
+      abortFetchController = new AbortController();
+      const summary = await generateSummary(text, abortFetchController.signal);
+      await postBoe(summary as string);
+    } catch (error) {
+      console.error('Error getting and posting summary:', error);
+    } finally {
+      isLoadingSummary.value = false;
+    }
+  };
+
+  const getAndPostMainPoints = async (text: string) => {
+    try {
+      isLoadingMainPoints.value = true;
+      abortFetchController = new AbortController();
+      const mainPoints = await generateMainPoints(
+        text,
+        abortFetchController.signal,
+      );
+      await postMainPoints(mainPoints as MainPoint[]);
+    } catch (error) {
+      console.error('Error getting and posting main points:', error);
+    } finally {
+      isLoadingMainPoints.value = false;
+    }
+  };
+
+  const getAndPostKeywords = async (text: string) => {
+    try {
+      isLoadingKeywords.value = true;
+      abortFetchController = new AbortController();
+      const keywords = await generateKeywords(
+        text,
+        abortFetchController.signal,
+      );
+      await postKeywords(keywords as Keyword[]);
+    } catch (error) {
+      console.error('Error getting and posting keywords:', error);
+    } finally {
+      isLoadingKeywords.value = false;
+    }
+  };
+
+  const getAndPostAreas = async (text: string) => {
+    try {
+      isLoadingAreas.value = true;
+      abortFetchController = new AbortController();
+      const areas = await generateAreas(text, abortFetchController.signal);
+      await postAreas(areas as Area[]);
+    } catch (error) {
+      console.error('Error getting and posting areas:', error);
+    } finally {
+      isLoadingAreas.value = false;
+    }
+  };
+
+  const getAndPostAspects = async (text: string) => {
+    try {
+      isLoadingAspects.value = true;
+      abortFetchController = new AbortController();
+      const aspects = await generateAspects(text, abortFetchController.signal);
+      await postAspects(aspects as Aspect[]);
+    } catch (error) {
+      console.error('Error getting and posting aspects:', error);
+    } finally {
+      isLoadingAspects.value = false;
+    }
+  };
+
+  const generateAndPostMissingData = async ({
+    boeData,
+    specificDataToGenerate,
+  }: {
+    boeData?: BoeResponse | null;
+    specificDataToGenerate?: RegenerateSection;
+  }) => {
+    const text = selectedDocumentToAnalyze.value?.text ?? '';
+
+    if (specificDataToGenerate) {
+      const options: SectionToReGenerate = {
+        summary: () => getAndPostSummary(text),
+        main_points: () => getAndPostMainPoints(text),
+        keywords: () => getAndPostKeywords(text),
+        areas: () => getAndPostAreas(text),
+        aspects: () => getAndPostAspects(text),
+      };
+
+      await options[specificDataToGenerate]();
+      return;
+    }
 
     // If the BOE doesn't exist, we generate the summary and POST the BOE in the database
     if (!boeData || !boeData?.summary) {
@@ -227,82 +356,46 @@ export const useBoeStore = defineStore('boe', () => {
     const generateTasks: GenerateTask[] = [
       {
         condition: !mainPoints.value?.length,
-        generate: () => generateMainPoints(text, abortSignal),
-        post: postMainPoints,
-        loadingState: () => (isLoadingMainPoints.value = false),
+        generate: () => getAndPostMainPoints(text),
       },
       {
         condition: !keywords.value?.length,
-        generate: () => generateKeywords(text, abortSignal),
-        post: postKeywords,
-        loadingState: () => (isLoadingKeywords.value = false),
+        generate: () => getAndPostKeywords(text),
       },
       {
         condition: !areas.value?.length,
-        generate: () => generateAreas(text, abortSignal),
-        post: postAreas,
-        loadingState: () => (isLoadingAreas.value = false),
+        generate: () => getAndPostAreas(text),
       },
       {
         condition: !aspects.value?.length,
-        generate: () => generateAspects(text, abortSignal),
-        post: postAspects,
-        loadingState: () => (isLoadingAspects.value = false),
+        generate: () => getAndPostAspects(text),
       },
     ];
 
+    // ! Parallel POST requests approach
     const postPromises = generateTasks
       .filter((task) => task.condition)
-      .map(async (task) => {
-        const data = await task.generate();
-        if (data) {
-          await task.post(data);
-          task.loadingState();
-        }
-      });
+      .map(async (task) => await task.generate());
 
     await Promise.all(postPromises);
-  };
 
-  const getBoeData = async () => {
-    isLoadingAnalysis.value = true;
-    const dateFromParams = route.params.date as string;
-    try {
-      initializeLoadingStates();
-
-      await scrapUrl(dateFromParams);
-
-      const { data: boeData } = await client
-        .from('boes')
-        .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
-        .eq('date', dateFromParams)
-        .single<BoeResponse>();
-
-      setBoeData(boeData);
-      await generateAndPostMissingData(boeData);
-      isLoadingAnalysis.value = false;
-    } catch (error) {
-      console.error('Error in getBoeData:', error);
-
-      if ((error as { statusCode: number }).statusCode === 404) {
-        await postBoe('');
-      }
-    } finally {
-      await getAllBoes();
-      resetLoadingStates();
-      isLoadingAnalysis.value = false;
-    }
+    // ! Sequential POST requests approach
+    // for (const task of generateTasks) {
+    //   if (task.condition) {
+    //     await task.generate();
+    //   }
+    // }
   };
 
   const postBoe = async (_summary: string) => {
     try {
       const boeAlreadyExists = await supabaseServices.checkBoeAlreadyExists(
-        route.params.date as string,
+        selectedDocumentToAnalyze.value?.url ?? '',
       );
 
       const boeData = {
         date: route.params.date as string,
-        url: scrapData.value?.url ?? '',
+        url: selectedDocumentToAnalyze.value?.url ?? '',
         summary: _summary,
       };
 
@@ -313,7 +406,6 @@ export const useBoeStore = defineStore('boe', () => {
       }
 
       summary.value = _summary;
-      boeUrl.value = boeData.url;
     } catch (error) {
       console.error('Error saving boe:', error);
       throw error;
@@ -371,15 +463,47 @@ export const useBoeStore = defineStore('boe', () => {
     }
   };
 
-  const stopAnalysis = () => {
-    abortController.abort('Analysis stopped by user');
-    isLoadingAnalysis.value = false;
+  const getBoeData = async ({ id }: AvailableScrapedBoe) => {
+    try {
+      if (abortFetchController) {
+        abortFetchController.abort();
+      }
+      abortFetchController = null;
+      $resetSelectedDocumentData();
+
+      const documentUrl = `https://boe.es/diario_boe/txt.php?id=${id}`;
+
+      initializeLoadingStates();
+
+      const { data: boeData } = await client
+        .from('boes')
+        .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
+        .eq('url', documentUrl)
+        .single<BoeResponse>();
+
+      setBoeData(boeData);
+      await generateAndPostMissingData({ boeData });
+    } catch (error) {
+      console.error('Error in getBoeData:', error);
+
+      if ((error as { statusCode: number }).statusCode === 404) {
+        await postBoe('');
+      }
+
+      resetLoadingStates();
+    } finally {
+      await getAllBoes();
+    }
   };
 
-  const $resetBoeData = () => {
-    scrapData.value = null;
+  const abortAnalysis = () => {
+    console.error('Aborting analysis...');
+    abortFetchController?.abort('Analysis stopped by user');
+    resetLoadingStates();
+  };
+
+  const $resetSelectedDocumentData = () => {
     boeId.value = null;
-    boeUrl.value = '';
     summary.value = '';
     mainPoints.value = [];
     areas.value = [];
@@ -387,11 +511,18 @@ export const useBoeStore = defineStore('boe', () => {
     aspects.value = [];
   };
 
+  const $resetBoeData = () => {
+    scrapData.value = null;
+    selectedDocumentToAnalyze.value = undefined;
+    isLoadingScrap.value = true;
+
+    $resetSelectedDocumentData();
+  };
+
   return {
     boesList,
     getAllBoes,
     boeId,
-    boeUrl,
     boeJSON,
     isShowingJSON,
     summary,
@@ -404,6 +535,7 @@ export const useBoeStore = defineStore('boe', () => {
     neutralAspects,
     postBoe,
     postAspects,
+    availableScrapedBoeDocuments,
     postKeywords,
     postAreas,
     postMainPoints,
@@ -417,14 +549,15 @@ export const useBoeStore = defineStore('boe', () => {
     selectedMonth,
     selectedYear,
     isLoadingAnalysis,
-    stopAnalysis,
-    abortController,
+    abortAnalysis,
     $resetBoeData,
     isLoadingAreas,
     isLoadingAspects,
     isLoadingKeywords,
     isLoadingMainPoints,
     isLoadingSummary,
+    selectedDocumentToAnalyze,
+    generateAndPostMissingData,
     getBoeData,
   };
 });

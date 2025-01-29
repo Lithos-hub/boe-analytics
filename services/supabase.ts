@@ -15,11 +15,11 @@ export class SupabaseServices implements BoeRepository {
     return data || [];
   }
 
-  async checkBoeAlreadyExists(date: string): Promise<boolean> {
+  async checkBoeAlreadyExists(documentUrl: string): Promise<boolean> {
     const { data, error } = await this.client
       .from('boes')
-      .select('date')
-      .eq('date', date);
+      .select('url')
+      .eq('url', documentUrl);
 
     if (error) {
       throw new Error(

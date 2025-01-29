@@ -6,13 +6,15 @@
       class="border border-secondary-500/50"
       icon="i-heroicons-arrow-top-right-on-square"
       target="_blank"
-      :to="boeUrl">
+      :disabled="!selectedDocumentToAnalyze"
+      :to="selectedDocumentToAnalyze?.url">
       Ver BOE
     </UButton>
     <UButton
       color="dark"
       variant="soft"
       class="border border-dark-500/50"
+      :disabled="!selectedDocumentToAnalyze"
       :icon="
         isShowingJSON
           ? 'i-heroicons-document-chart-bar'
@@ -26,7 +28,7 @@
       variant="soft"
       class="border border-green-500/50"
       icon="i-heroicons-arrow-down-tray"
-      disabled
+      :disabled="!selectedDocumentToAnalyze"
       @click="downloadPDF">
       Descargar PDF
     </UButton>
@@ -36,8 +38,15 @@
 <script setup lang="ts">
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
-const { isShowingJSON, boeUrl, summary, mainPoints, keywords, areas, aspects } =
-  storeToRefs(useBoeStore());
+const {
+  isShowingJSON,
+  selectedDocumentToAnalyze,
+  summary,
+  mainPoints,
+  keywords,
+  areas,
+  aspects,
+} = storeToRefs(useBoeStore());
 
 const toggleJSON = () => {
   isShowingJSON.value = !isShowingJSON.value;
@@ -149,10 +158,8 @@ const downloadPDF = async () => {
 
   link.href = URL.createObjectURL(blob);
 
-  link.download = `${boeUrl.value.split('id=')[1]}.pdf`;
+  link.download = `${selectedDocumentToAnalyze.value!.id}.pdf`;
 
   link.click();
 };
 </script>
-
-<style scoped></style>
