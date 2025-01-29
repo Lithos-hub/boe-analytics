@@ -19,7 +19,21 @@
       v-else-if="isLoadingAreas">
       <Loader :status-messages="loadingAreasMessages" />
     </div>
-    <p class="text-red-500" v-else>No se ha podido generar la información.</p>
+    <div v-else class="flex flex-col items-center justify-center gap-5">
+      <p class="text-red-500">No se ha podido generar la información.</p>
+      <UButton
+        color="primary"
+        variant="soft"
+        icon="i-heroicons-arrow-path"
+        @click="
+          () =>
+            generateAndPostMissingData({
+              specificDataToGenerate: 'areas',
+            })
+        ">
+        Reintentar
+      </UButton>
+    </div>
   </div>
 </template>
 
@@ -34,6 +48,8 @@ const loadingAreasMessages = [
   'Generando áreas...',
   'Guardando en base de datos...',
 ];
+
+const { generateAndPostMissingData } = useBoeStore();
 </script>
 
 <style lang="scss" scoped>
