@@ -12,7 +12,21 @@
       v-else-if="isLoadingKeywords">
       <Loader :status-messages="['Generando palabras clave...']" />
     </div>
-    <p class="text-red-500" v-else>No se ha podido generar la información.</p>
+    <div v-else class="flex flex-col items-center justify-center gap-5">
+      <p class="text-red-500">No se ha podido generar la información.</p>
+      <UButton
+        color="primary"
+        variant="soft"
+        icon="i-heroicons-arrow-path"
+        @click="
+          () =>
+            generateAndPostMissingData({
+              specificDataToGenerate: 'keywords',
+            })
+        ">
+        Reintentar
+      </UButton>
+    </div>
   </div>
 </template>
 
@@ -20,6 +34,8 @@
 import type { KeywordsProps } from './Keywords.interfaces';
 
 defineProps<KeywordsProps>();
+
+const { generateAndPostMissingData } = useBoeStore();
 </script>
 
 <style lang="scss" scoped>
