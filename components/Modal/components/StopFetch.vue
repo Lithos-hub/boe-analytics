@@ -30,7 +30,7 @@
         Cancelar
       </UButton>
       <UButton
-        @click="handleStopAnalysis"
+        @click="handleAbortAnalysis"
         variant="solid"
         color="red"
         class="text-white">
@@ -44,10 +44,10 @@
 const { hideModal } = useModalStore();
 
 const { missingData } = storeToRefs(useBoeStore());
-const { stopAnalysis } = useBoeStore();
+const { abortAnalysis } = useBoeStore();
 
-const handleStopAnalysis = () => {
-  stopAnalysis();
+const handleAbortAnalysis = () => {
+  abortAnalysis();
   hideModal();
 };
 </script>
