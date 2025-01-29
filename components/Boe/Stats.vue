@@ -4,10 +4,23 @@
       <Pie :data :options />
     </div>
   </div>
-  <div v-else>
-    <p class="text-red-500">
-      No se han podido obtener las estadísticas del boletín.
-    </p>
+  <div v-else-if="isLoadingStats">
+    <Loader :status-messages="loadingStatsMessages" />
+  </div>
+  <div v-else class="flex flex-col items-center justify-center gap-5">
+    <p class="text-red-500">No se ha podido generar la información.</p>
+    <UButton
+      color="primary"
+      variant="soft"
+      icon="i-heroicons-arrow-path"
+      @click="
+        () =>
+          generateAndPostMissingData({
+            specificDataToGenerate: 'aspects',
+          })
+      ">
+      Reintentar
+    </UButton>
   </div>
 </template>
 
@@ -23,9 +36,17 @@ import {
 } from 'chart.js';
 import type { StatsProps } from './Stats.interfaces';
 
+const loadingStatsMessages = [
+  'Accediendo al documento...',
+  'Extrayendo información...',
+  'Generando estadísticas...',
+];
+
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const props = defineProps<StatsProps>();
+
+const { generateAndPostMissingData } = useBoeStore();
 
 const data: ChartData<'pie'> = {
   labels: ['Aspectos positivos', 'Aspectos negativos', 'Aspectos neutrales'],
