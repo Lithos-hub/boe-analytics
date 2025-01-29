@@ -1,5 +1,5 @@
 export interface SummaryProps {
+  isLoadingSummary: boolean;
     text: string;
-    boeLink: string;
   }
   
