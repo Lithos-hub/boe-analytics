@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-5">
     <div class="loader" />
-    <strong class="text-primary text-center" v-if="statusMessages">
+    <small class="text-center text-xs text-primary-200" v-if="statusMessages">
       {{ statusMessages[currentMessageIndex] }}
-    </strong>
+    </small>
   </div>
 </template>
 
@@ -25,13 +25,16 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+$size: 30px;
+$border: 2px;
+
 .loader {
-  width: 48px;
-  height: 48px;
+  width: $size;
+  height: $size;
   border-radius: 50%;
   display: inline-block;
   position: relative;
-  border: 3px solid;
+  border: $border solid;
   border-color: #6366f1 #6366f1 transparent transparent;
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
@@ -46,10 +49,10 @@ onMounted(() => {
   top: 0;
   bottom: 0;
   margin: auto;
-  border: 3px solid;
+  border: $border solid;
   border-color: transparent transparent #22c55e #22c55e;
-  width: 40px;
-  height: 40px;
+  width: calc($size - 8px);
+  height: calc($size - 8px);
   border-radius: 50%;
   box-sizing: border-box;
   animation: rotationBack 0.5s linear infinite;
