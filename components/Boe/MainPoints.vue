@@ -12,7 +12,21 @@
       v-else-if="isLoadingMainPoints">
       <Loader :status-messages="loadingMainPointsMessages" />
     </div>
-    <p class="text-red-500" v-else>No se ha podido generar la información.</p>
+    <div v-else class="flex flex-col items-center justify-center gap-5">
+      <p class="text-red-500">No se ha podido generar la información.</p>
+      <UButton
+        color="primary"
+        variant="soft"
+        icon="i-heroicons-arrow-path"
+        @click="
+          () =>
+            generateAndPostMissingData({
+              specificDataToGenerate: 'main_points',
+            })
+        ">
+        Reintentar
+      </UButton>
+    </div>
   </div>
 </template>
 
@@ -27,6 +41,8 @@ const loadingMainPointsMessages = [
   'Generando puntos clave...',
   'Guardando en base de datos...',
 ];
+
+const { generateAndPostMissingData } = useBoeStore();
 </script>
 
 <style lang="scss" scoped>
