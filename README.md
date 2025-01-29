@@ -1,5 +1,9 @@
 # BOE Analytics
 
+<div style="text-align:center;">
+<img src="https://github.com/Lithos-hub/boe-analytics/blob/master/public/logo-big.png?raw=true" width="180" height="180" />
+</div>
+
 ⚠️ Project under development ⚠️
 
 This project aims to create summaries of the Spanish Official State Gazette (BOE) using Artificial Intelligence. It employs scraping techniques and queries to the [DeepSeek](https://www.deepseek.com) API, a powerful open-source LLM.
