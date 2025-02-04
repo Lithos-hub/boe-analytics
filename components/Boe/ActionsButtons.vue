@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { jsPDF } from 'jspdf';
 
 const {
   isShowingJSON,
@@ -53,113 +53,80 @@ const toggleJSON = () => {
 };
 
 const downloadPDF = async () => {
-  const pdfDoc = await PDFDocument.create();
+  const doc = new jsPDF();
 
-  const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  // Doc title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
 
-  const page = pdfDoc.addPage([600, 800]);
+  const title = `${selectedDocumentToAnalyze.value?.id} - Análisis`;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const textWidth = doc.getTextWidth(title);
+  const xPosition = (pageWidth - textWidth) / 2;
+  const yPosition = pageHeight / 2;
+  doc.text(title, xPosition, yPosition);
 
-  const { width, height } = page.getSize();
-  const margin = 20;
-  let yPosition = height - margin;
+  // summary
+  doc.setFont('helvetica', 'normal');
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.text('Resumen', 20, 20);
 
-  const drawTextBlock = (
-    title: string,
-    content: string,
-    fontSizeTitle: number,
-    fontSizeContent: number,
-    spacing: number,
-  ) => {
-    page.drawText(title, {
-      x: margin,
-      y: yPosition,
-      size: fontSizeTitle,
-      font: helveticaFont,
-      color: rgb(0.2, 0.2, 0.5),
-    });
-    yPosition -= spacing;
-
-    page.drawText(content, {
-      x: margin,
-      y: yPosition,
-      size: fontSizeContent,
-      font: helveticaFont,
-      color: rgb(0, 0, 0),
-    });
-    yPosition -= spacing + content.split('\n').length * fontSizeContent;
+  const data = {
+    summary: summary.value.replaceAll('<br>', '\n'),
+    mainPoints: mainPoints.value,
+    keywords: keywords.value,
+    areas: areas.value,
+    aspects: aspects.value,
   };
 
-  drawTextBlock('Resumen', summary.value, 16, 12, 40);
-  drawTextBlock('Puntos principales', mainPoints.value.join('\n'), 16, 12, 40);
-  drawTextBlock('Palabras clave', keywords.value.join('\n'), 16, 12, 40);
+  doc.setFontSize(12);
+  doc.text(data.summary, 20, 30, { maxWidth: 170 });
 
-  page.drawText('Áreas', {
-    x: margin,
-    y: yPosition,
-    size: 18,
-    font: helveticaFont,
-    color: rgb(0, 0, 0),
-  });
-  yPosition -= 40;
+  // Main points
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.text('Puntos principales', 20, 20);
 
-  areas.value.forEach(({ name, description }, index) => {
-    page.drawText(`${index + 1}. ${name}`, {
-      x: margin,
-      y: yPosition,
-      size: 12,
-      font: helveticaFont,
-      color: rgb(0, 0, 0),
-    });
-    yPosition -= 20;
-
-    page.drawText(description, {
-      x: margin,
-      y: yPosition,
-      size: 10,
-      font: helveticaFont,
-      color: rgb(0, 0, 0),
-    });
-    yPosition -= 40;
+  doc.setFontSize(12);
+  data.mainPoints.forEach((point, index) => {
+    doc.text(`${index + 1}. ${point}`, 20, 30 + index * 10, { maxWidth: 170 });
   });
 
-  page.drawText('Aspectos', {
-    x: margin,
-    y: yPosition,
-    size: 18,
-    font: helveticaFont,
-    color: rgb(0, 0, 0),
-  });
-  yPosition -= 40;
+  // Keywords
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.text('Palabras Clave', 20, 20);
 
-  aspects.value.forEach(({ aspect, type, description }, index) => {
-    page.drawText(`${index + 1}. ${aspect} (${type})`, {
-      x: margin,
-      y: yPosition,
-      size: 12,
-      font: helveticaFont,
-      color: rgb(0, 0, 0),
+  doc.setFontSize(12);
+  doc.text(data.keywords.join(', '), 20, 30, { maxWidth: 170 });
+
+  // Areas
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.text('Áreas Afectadas', 20, 20);
+
+  doc.setFontSize(12);
+  data.areas.forEach((area, index) => {
+    doc.text(`${area.name}: ${area.description}`, 20, 30 + index * 20, {
+      maxWidth: 170,
     });
-    yPosition -= 20;
-
-    page.drawText(description, {
-      x: margin,
-      y: yPosition,
-      size: 10,
-      font: helveticaFont,
-      color: rgb(0, 0, 0),
-    });
-    yPosition -= 40;
   });
-  const pdfBytes = await pdfDoc.save();
 
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  // Aspects
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.text('Aspectos a destacar', 20, 20);
 
-  const link = document.createElement('a');
+  doc.setFontSize(12);
+  data.aspects.forEach((aspect, index) => {
+    doc.text(`${aspect.aspect}: ${aspect.description}`, 20, 30 + index * 20, {
+      maxWidth: 170,
+    });
+  });
 
-  link.href = URL.createObjectURL(blob);
-
-  link.download = `${selectedDocumentToAnalyze.value!.id}.pdf`;
-
-  link.click();
+  // Save PDF
+  doc.save(`${selectedDocumentToAnalyze.value?.id}.pdf`);
 };
 </script>
