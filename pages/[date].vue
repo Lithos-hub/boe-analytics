@@ -55,9 +55,10 @@
           </div>
           <div
             v-if="!isLoadingScrap && missingData.length && isLoadingAnalysis"
-            class="flex gap-2.5">
+            class="flex items-center gap-2.5">
             <strong class="text-xs text-primary-500">
-              Los siguientes apartados están siendo procesados:
+              Espere, por favor. Los siguientes apartados están siendo
+              procesados:
             </strong>
             <ul class="flex flex-wrap gap-2.5">
               <li v-for="{ section } in missingData" :key="section">
@@ -82,7 +83,7 @@
             <article>
               <Card
                 class="Home__mainPoints--card"
-                title="Puntos clave del boletín">
+                title="Puntos principales del boletín">
                 <BoeMainPoints
                   :main-points
                   :is-loading-main-points="isLoadingMainPoints" />

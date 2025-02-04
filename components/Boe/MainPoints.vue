@@ -38,7 +38,7 @@ defineProps<MainPointsProps>();
 const loadingMainPointsMessages = [
   'Accediendo al documento...',
   'Extrayendo información...',
-  'Generando puntos clave...',
+  'Generando puntos principales...',
   'Guardando en base de datos...',
 ];
 

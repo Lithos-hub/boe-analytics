@@ -60,7 +60,7 @@
             Resumen de unos pocos párrafos del BOE.
           </li>
           <li class="About__list-item">
-            <strong>Puntos claves del boletín:</strong>
+            <strong>Puntos principales del boletín:</strong>
             Lista de los puntos más relevantes del documento.
           </li>
           <li class="About__list-item">
