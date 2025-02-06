@@ -387,7 +387,7 @@ export const useBoeStore = defineStore('boe', () => {
     // }
   };
 
-  const postBoe = async (_summary: string) => {
+  const postBoe = async (_summary?: string) => {
     try {
       const boeAlreadyExists = await supabaseServices.checkBoeAlreadyExists(
         selectedDocumentToAnalyze.value?.url ?? '',
@@ -396,7 +396,7 @@ export const useBoeStore = defineStore('boe', () => {
       const boeData = {
         date: route.params.date as string,
         url: selectedDocumentToAnalyze.value?.url ?? '',
-        summary: _summary,
+        summary: _summary ?? '',
       };
 
       if (boeAlreadyExists) {
@@ -405,10 +405,12 @@ export const useBoeStore = defineStore('boe', () => {
         boeId.value = await supabaseServices.saveAndReturnBoeId(boeData);
       }
 
-      summary.value = _summary;
+      summary.value = _summary ?? '';
     } catch (error) {
       console.error('Error saving boe:', error);
       throw error;
+    } finally {
+      await getAllBoes();
     }
   };
 
@@ -464,6 +466,9 @@ export const useBoeStore = defineStore('boe', () => {
   };
 
   const getBoeData = async ({ id }: AvailableScrapedBoe) => {
+    // First, we post the Boe
+    await postBoe();
+
     try {
       if (abortFetchController) {
         abortFetchController.abort();
@@ -485,11 +490,6 @@ export const useBoeStore = defineStore('boe', () => {
       await generateAndPostMissingData({ boeData });
     } catch (error) {
       console.error('Error in getBoeData:', error);
-
-      if ((error as { statusCode: number }).statusCode === 404) {
-        await postBoe('');
-      }
-
       resetLoadingStates();
     } finally {
       await getAllBoes();
@@ -498,6 +498,7 @@ export const useBoeStore = defineStore('boe', () => {
 
   const abortAnalysis = () => {
     console.error('Aborting analysis...');
+    abortScrapController?.abort('Scraping stopped by user');
     abortFetchController?.abort('Analysis stopped by user');
     resetLoadingStates();
   };
