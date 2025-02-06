@@ -1,4 +1,4 @@
-import { getAnalysisPoints } from '~/server/services/openai/aspects';
+import { getAspects } from '~/server/services/openai/aspects';
 import {
   genericErrorHandler,
   missingPropertiesHandler,
@@ -9,9 +9,7 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event);
     const { text } = missingPropertiesHandler(['text'], body);
 
-    const analysisPoints = await getAnalysisPoints(text);
-
-    return JSON.parse(analysisPoints || '[]');
+    return await getAspects(text);
   } catch (error: unknown) {
     console.error('Error in boe/analysis-points:', error);
     genericErrorHandler(error);

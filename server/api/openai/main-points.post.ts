@@ -8,10 +8,7 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const { text } = missingPropertiesHandler(['text'], body);
-
-    const mainPoints = await getMainPoints(text);
-
-    return JSON.parse(mainPoints || '[]');
+    return await getMainPoints(text);
   } catch (error: unknown) {
     console.error('Error in boe/main-points:', error);
     genericErrorHandler(error);

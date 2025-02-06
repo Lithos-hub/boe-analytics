@@ -6,10 +6,7 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const { text } = missingPropertiesHandler(['text'], body);
-
-    const keywords = await getKeywords(text);
-
-    return JSON.parse(keywords || '[]');
+    return await getKeywords(text);
   } catch (error: unknown) {
     console.error('Error in boe/keywords:', error);
     genericErrorHandler(error);
