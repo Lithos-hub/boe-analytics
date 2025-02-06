@@ -1,6 +1,10 @@
 import { openai } from '@/server/services/openai';
 import { TextChunkManager } from '@/services/deepseek';
 
+interface DeepSeekJSONResponse {
+  keyword: string;
+}
+
 const prompt = (
   text: string,
 ) => `Se te proporcionará un texto relativo al Boletín Oficial del Estado de España. Debes identificar las palabras clave más relevantes del texto.
@@ -14,9 +18,8 @@ const prompt = (
 export const getKeywords = async (text: string) => {
   const textChunkManager = new TextChunkManager();
 
-  const results = await textChunkManager.processLargeText(
-    text,
-    async (chunk) => {
+  const results: DeepSeekJSONResponse[] =
+    await textChunkManager.processLargeText(text, async (chunk) => {
       const response = await openai.chat.completions.create({
         messages: [
           {
@@ -31,8 +34,7 @@ export const getKeywords = async (text: string) => {
           keyword: word.trim().replace(/"/g, ''),
         };
       });
-    },
-  );
+    });
 
   return [...new Set(results.flat())];
 };
