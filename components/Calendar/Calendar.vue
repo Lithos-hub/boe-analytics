@@ -36,21 +36,13 @@ const emits = defineEmits(['set-selected-date']);
 const { selectedMonth, selectedYear } = storeToRefs(useBoeStore());
 
 const monthDays = computed(() => {
-  const days = new Date(
-    selectedYear.value,
-    selectedMonth.value - 1,
-    0,
-  ).getDate();
+  const days = new Date(selectedYear.value, selectedMonth.value, 0).getDate();
   const firstDay = new Date(
     selectedYear.value,
-    selectedMonth.value - 1,
+    selectedMonth.value,
     1,
   ).getDay();
-  const lastDay = new Date(
-    selectedYear.value,
-    selectedMonth.value - 1,
-    0,
-  ).getDay();
+  const lastDay = new Date(selectedYear.value, selectedMonth.value, 0).getDay();
 
   return {
     days,
