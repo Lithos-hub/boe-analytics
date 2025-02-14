@@ -48,7 +48,7 @@ const props = defineProps<StatsProps>();
 
 const { generateAndPostMissingData } = useBoeStore();
 
-const data: ChartData<'pie'> = {
+const data = computed<ChartData<'pie'>>(() => ({
   labels: ['Aspectos positivos', 'Aspectos negativos', 'Aspectos neutrales'],
   datasets: [
     {
@@ -63,7 +63,7 @@ const data: ChartData<'pie'> = {
       borderColor: ['#1D1C2B', '#1D1C2B', '#1D1C2B'],
     },
   ],
-};
+}));
 
 const options: ChartOptions<'pie'> = {
   responsive: true,

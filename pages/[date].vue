@@ -1,44 +1,6 @@
 <template>
   <div class="flex flex-col gap-2.5">
-    <header class="z-50 rounded-2xl bg-dark-950/50 p-5 backdrop-blur-sm">
-      <div v-if="!isLoadingScrap" class="flex flex-col items-center gap-2.5">
-        <small class="text-primary-500">
-          Hay un total de
-          <strong class="text-white">
-            {{ availableScrapedBoeDocuments.length }}
-          </strong>
-          documentos disponibles para el {{ formattedDate }}
-        </small>
-        <USelectMenu
-          v-model="selectedDocumentToAnalyze"
-          :options="availableScrapedBoeDocuments"
-          placeholder="Selecciona un documento para analizar"
-          class="w-full"
-          option-attribute="title"
-          @change="getBoeData">
-          <template #label>
-            <span v-if="selectedDocumentToAnalyze">
-              ({{ selectedDocumentToAnalyze.id }}) -
-              {{ selectedDocumentToAnalyze.title }} -
-              {{ selectedDocumentToAnalyze.subtitle }}
-            </span>
-          </template>
-          <template #option="{ option }">
-            <div class="flex flex-col">
-              <strong class="text-primary-500">
-                ({{ option.id }}) - {{ option.title }}
-              </strong>
-              <small class="text-primary-200">{{ option.subtitle }}</small>
-            </div>
-          </template>
-        </USelectMenu>
-      </div>
-      <Loader
-        v-else
-        :status-messages="[
-          `Accediendo a los documentos disponibles del ${formattedDate}`,
-        ]" />
-    </header>
+    <BoeSelector />
     <div
       class="max-h-[calc(100vh-210px)] overflow-y-scroll rounded-2xl bg-dark-950/50 p-5 backdrop-blur-sm">
       <section class="flex flex-col gap-5" v-if="selectedDocumentToAnalyze">
@@ -210,10 +172,9 @@ const {
   isLoadingSummary,
   isLoadingAnalysis,
   selectedDocumentToAnalyze,
-  availableScrapedBoeDocuments,
 } = storeToRefs(boeStore);
 
-const { getAllBoes, $resetBoeData, scrapUrl, getBoeData } = boeStore;
+const { fetchBoesList, $resetBoeData, scrapUrl } = boeStore;
 
 // Consts
 const route = useRoute();
@@ -311,7 +272,7 @@ onMounted(async () => {
   selectedMonth.value = Number((route.params.date as string).split('-')[1]);
   selectedYear.value = Number((route.params.date as string).split('-')[0]);
 
-  await getAllBoes();
+  await fetchBoesList();
   await scrapUrl(route.params.date as string);
 });
 

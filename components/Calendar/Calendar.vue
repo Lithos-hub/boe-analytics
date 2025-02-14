@@ -23,8 +23,7 @@
     <CalendarGrid
       :month-days="monthDays"
       :selected-month="selectedMonth"
-      :selected-year="selectedYear"
-      :available-boes-list="availableBoeListByDates" />
+      :selected-year="selectedYear" />
   </div>
 </template>
 
@@ -34,11 +33,7 @@ import CalendarGrid from './components/CalendarGrid.vue';
 
 const emits = defineEmits(['set-selected-date']);
 
-const { boesList, selectedMonth, selectedYear } = storeToRefs(useBoeStore());
-
-const availableBoeListByDates = computed(
-  () => boesList.value.map(({ date, url }) => ({ date, url })) ?? [],
-);
+const { selectedMonth, selectedYear } = storeToRefs(useBoeStore());
 
 const monthDays = computed(() => {
   const days = new Date(

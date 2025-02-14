@@ -6,7 +6,7 @@ export interface BoeColumn {
 export interface Boe {
   id: number;
   date: string;
-  url: string;
+  doc_id: string;
   summary: string;
 }
 
@@ -43,7 +43,7 @@ export interface Aspect extends BoeColumn {
 export interface BoeResponse {
   id: number;
   date: string;
-  url: string;
+  doc_id: string;
   summary: string;
   main_points: MainPoint[];
   keywords: Keyword[];

@@ -38,21 +38,23 @@
         <small class="absolute left-1 top-1 text-xs">
           {{ day }}
         </small>
-        <div class="absolute bottom-1 right-1">
+        <div
+          v-if="hasSomeBoe(formatDate(selectedYear, selectedMonth, day))"
+          class="absolute bottom-1 right-1">
           <!-- If boe available by date, show green check icon -->
           <div
-            v-if="
-              availableBoesByDate(formatDate(selectedYear, selectedMonth, day))
+            v-if="hasCompleteBoe(formatDate(selectedYear, selectedMonth, day))"
+            class="h-2 w-2 rounded-full bg-green-500" />
+          <div
+            v-else-if="
+              hasIncompleteBoe(formatDate(selectedYear, selectedMonth, day))
             "
-            class="h-2 w-2 rounded-full"
-            :class="{
-              'bg-green-500': availableBoesByDateAndUrl(
-                formatDate(selectedYear, selectedMonth, day),
-              ),
-              'bg-red-500': availableBoesByDateAndNoUrl(
-                formatDate(selectedYear, selectedMonth, day),
-              ),
-            }" />
+            class="h-2 w-2 rounded-full bg-yellow-500" />
+          <div
+            v-else-if="
+              hasNoDocIdBoe(formatDate(selectedYear, selectedMonth, day))
+            "
+            class="h-2 w-2 rounded-full bg-red-500" />
         </div>
       </div>
 
@@ -68,27 +70,34 @@
 import { weekDaysShort } from '@/components/Calendar/Calendar.const';
 import type { CalendarGridProps } from './CalendarGrid.interfaces';
 
-const { monthDays, selectedYear, selectedMonth, availableBoesList } =
+const { monthDays, selectedYear, selectedMonth } =
   defineProps<CalendarGridProps>();
 
 const route = useRoute();
 const router = useRouter();
 
 const { showModal } = useModalStore();
-const { isLoadingAnalysis } = storeToRefs(useBoeStore());
+const { isLoadingAnalysis, boesList } = storeToRefs(useBoeStore());
 
 const selectedDate = computed(() => route.params.date as string);
 
-const availableBoesByDate = (_date: string) => {
-  return availableBoesList.map(({ date }) => date).includes(_date);
+const hasSomeBoe = (_date: string) => {
+  return boesList.value.some((boe) => boe.date === _date);
 };
 
-const availableBoesByDateAndUrl = (_date: string) => {
-  return availableBoesList.some(({ date, url }) => date === _date && url);
+const hasCompleteBoe = (_date: string) => {
+  const boesForThisDate = boesList.value.filter((boe) => boe.date === _date);
+  return boesForThisDate.every((boe) => boe.doc_id && boe.has_all_data);
 };
 
-const availableBoesByDateAndNoUrl = (_date: string) => {
-  return availableBoesList.some(({ date, url }) => date === _date && !url);
+const hasIncompleteBoe = (_date: string) => {
+  return boesList.value.some(
+    (boe) => boe.date === _date && boe.doc_id && !boe.has_all_data,
+  );
+};
+
+const hasNoDocIdBoe = (_date: string) => {
+  return boesList.value.some((boe) => boe.date === _date && !boe.doc_id);
 };
 
 const handleDayCellClick = (day: number) => {

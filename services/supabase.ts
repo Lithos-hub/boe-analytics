@@ -7,7 +7,7 @@ import type { Aspect } from '~/models/boe';
 export class SupabaseServices implements BoeRepository {
   private client = useSupabaseClient<Database>();
 
-  async getAllBoes(): Promise<{ date: string }[]> {
+  async fetchBoesList(): Promise<{ date: string }[]> {
     const { data, error } = await this.client.from('boes').select('date');
     if (error) {
       throw new Error(`Error when getting all BOEs: ${error.message}`);
@@ -15,11 +15,11 @@ export class SupabaseServices implements BoeRepository {
     return data || [];
   }
 
-  async checkBoeAlreadyExists(documentUrl: string): Promise<boolean> {
+  async checkBoeAlreadyExists(doc_id: string): Promise<boolean> {
     const { data, error } = await this.client
       .from('boes')
-      .select('url')
-      .eq('url', documentUrl);
+      .select('doc_id')
+      .eq('doc_id', doc_id);
 
     if (error) {
       throw new Error(
@@ -32,14 +32,14 @@ export class SupabaseServices implements BoeRepository {
 
   async saveAndReturnBoeId({
     date,
-    url,
+    doc_id,
     summary,
   }: BoePostData): Promise<number | null> {
     const { data, error } = await this.client
       .from('boes')
       .insert({
         date,
-        url,
+        doc_id,
         summary,
       })
       .select()
@@ -54,13 +54,13 @@ export class SupabaseServices implements BoeRepository {
 
   async updateAndReturnBoeId({
     date,
-    url,
+    doc_id,
     summary,
   }: BoePostData): Promise<number | null> {
     const { data, error } = await this.client
       .from('boes')
       .update({
-        url,
+        doc_id,
         summary,
       })
       .match({ date })

@@ -11,6 +11,16 @@ import { SupabaseServices } from '~/services/supabase';
 import type { Database } from '~/types/supabase';
 import type { GenerateTask, SectionToReGenerate } from './boeStore.interfaces';
 
+interface AvailableScrapedBoe {
+  id: string;
+  url: string;
+  title: string;
+  subtitle: string;
+  text: string;
+  date: string | null;
+  has_all_data: boolean;
+}
+
 export const useBoeStore = defineStore('boe', () => {
   let abortFetchController: AbortController | null = null;
   let abortScrapController: AbortController | null = null;
@@ -24,6 +34,7 @@ export const useBoeStore = defineStore('boe', () => {
   const scrapData = ref<ScrapResponse | null>(null);
 
   const isLoadingScrap = ref(true);
+  const scrapError = ref<string>();
 
   const isLoadingSummary = ref(false);
   const isLoadingMainPoints = ref(false);
@@ -59,25 +70,20 @@ export const useBoeStore = defineStore('boe', () => {
     );
   });
 
-  const availableScrapedBoeDocuments = computed<AvailableScrapedBoe[]>(() =>
-    scrapData.value
-      ? Object.keys(scrapData.value).map((key) => {
-          if (!scrapData.value) {
-            return {
-              id: '',
-              url: '',
-              title: '',
-              subtitle: '',
-              text: '',
-            };
-          }
-          return {
-            id: key,
-            ...scrapData.value[key],
-          };
-        })
-      : [],
-  );
+  const availableScrapedBoeDocuments = computed<AvailableScrapedBoe[]>(() => {
+    if (!scrapData.value) return [];
+
+    return Object.entries(scrapData.value).map(([key, boeData]) => {
+      const boeInfo = boesList.value.find((boe) => boe.doc_id === key);
+
+      return {
+        id: key,
+        ...boeData,
+        date: boeInfo?.date || null,
+        has_all_data: boeInfo?.has_all_data || false,
+      };
+    });
+  });
 
   const wordsCount = computed(
     () => selectedDocumentToAnalyze.value?.text?.split(' ').length ?? 0,
@@ -168,20 +174,44 @@ export const useBoeStore = defineStore('boe', () => {
         signal: abortScrapController.signal,
       })) as ScrapResponse;
       scrapData.value = data;
-      isLoadingScrap.value = false;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error scraping url: api/scrap/${endpoint}`, error);
+      scrapError.value =
+        'Error al obtener los documentos. Inténtelo de nuevo más tarde.';
       throw error;
+    } finally {
+      isLoadingScrap.value = false;
     }
   };
 
-  const getAllBoes = async () => {
-    const { data, error } = await client.from('boes').select('date, url');
+  const fetchBoesList = async () => {
+    const { data, error } = await client
+      .from('boes')
+      .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`);
+
     if (error) {
       console.error('Error getting all BOEs:', error);
       return;
     }
-    boesList.value = data;
+
+    const boesWithDataStatus = data.map(({ date, doc_id, url, ...boe }) => ({
+      date,
+      doc_id,
+      has_all_data: Boolean(
+        boe.summary &&
+          boe.summary.length &&
+          boe.main_points &&
+          boe.main_points.length &&
+          boe.areas &&
+          boe.areas.length &&
+          boe.keywords &&
+          boe.keywords.length &&
+          boe.aspects &&
+          boe.aspects.length,
+      ),
+    }));
+
+    boesList.value = boesWithDataStatus;
   };
 
   const initializeLoadingStates = () => {
@@ -205,7 +235,7 @@ export const useBoeStore = defineStore('boe', () => {
 
     const dataMappers = {
       basic: () => {
-        if (boeData?.id && boeData?.url) {
+        if (boeData?.id && boeData?.doc_id) {
           boeId.value = boeData.id;
         }
       },
@@ -390,13 +420,13 @@ export const useBoeStore = defineStore('boe', () => {
   const postBoe = async (_summary?: string) => {
     try {
       const boeAlreadyExists = await supabaseServices.checkBoeAlreadyExists(
-        selectedDocumentToAnalyze.value?.url ?? '',
+        selectedDocumentToAnalyze.value?.id ?? '',
       );
 
       const boeData = {
         date: route.params.date as string,
-        url: selectedDocumentToAnalyze.value?.url ?? '',
         summary: _summary ?? '',
+        doc_id: selectedDocumentToAnalyze.value?.id ?? '',
       };
 
       if (boeAlreadyExists) {
@@ -410,7 +440,7 @@ export const useBoeStore = defineStore('boe', () => {
       console.error('Error saving boe:', error);
       throw error;
     } finally {
-      await getAllBoes();
+      await fetchBoesList();
     }
   };
 
@@ -466,24 +496,18 @@ export const useBoeStore = defineStore('boe', () => {
   };
 
   const getBoeData = async ({ id }: AvailableScrapedBoe) => {
-    // First, we post the Boe
-    await postBoe();
-
     try {
       if (abortFetchController) {
         abortFetchController.abort();
       }
       abortFetchController = null;
       $resetSelectedDocumentData();
-
-      const documentUrl = `https://boe.es/diario_boe/txt.php?id=${id}`;
-
       initializeLoadingStates();
 
       const { data: boeData } = await client
         .from('boes')
         .select(`*, areas (*), main_points (*), keywords (*), aspects (*)`)
-        .eq('url', documentUrl)
+        .eq('doc_id', id)
         .single<BoeResponse>();
 
       setBoeData(boeData);
@@ -492,7 +516,7 @@ export const useBoeStore = defineStore('boe', () => {
       console.error('Error in getBoeData:', error);
       resetLoadingStates();
     } finally {
-      await getAllBoes();
+      await fetchBoesList();
     }
   };
 
@@ -522,7 +546,7 @@ export const useBoeStore = defineStore('boe', () => {
 
   return {
     boesList,
-    getAllBoes,
+    fetchBoesList,
     boeId,
     boeJSON,
     isShowingJSON,
@@ -557,6 +581,7 @@ export const useBoeStore = defineStore('boe', () => {
     isLoadingKeywords,
     isLoadingMainPoints,
     isLoadingSummary,
+    scrapError,
     selectedDocumentToAnalyze,
     generateAndPostMissingData,
     getBoeData,

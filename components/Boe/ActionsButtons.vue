@@ -7,7 +7,7 @@
       icon="i-heroicons-arrow-top-right-on-square"
       target="_blank"
       :disabled="!selectedDocumentToAnalyze"
-      :to="selectedDocumentToAnalyze?.url">
+      :to="buildBoeUrl(selectedDocumentToAnalyze?.id)">
       Ver BOE
     </UButton>
     <UButton
