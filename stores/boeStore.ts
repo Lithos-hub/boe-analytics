@@ -6,7 +6,7 @@ import type {
   Keyword,
   MainPoint,
 } from '~/models/boe';
-import type { ScrapResponse } from '~/server/api/scrap/scrap.interfaces';
+import type { ScrapResponse } from '~/server/api/documentsByDay/scrap.interfaces';
 import { SupabaseServices } from '~/services/supabase';
 import type { Database } from '~/types/supabase';
 import type { GenerateTask, SectionToReGenerate } from './boeStore.interfaces';
@@ -58,6 +58,9 @@ export const useBoeStore = defineStore('boe', () => {
   const selectedYear = ref<number>(new Date().getFullYear());
 
   const selectedDocumentToAnalyze = ref<AvailableScrapedBoe>();
+
+  const monthDocuments = ref<Record<string, number>>({});
+  const isLoadingMonthScrap = ref(false);
 
   // Computed
   const isLoadingAnalysis = computed(() => {
@@ -170,12 +173,15 @@ export const useBoeStore = defineStore('boe', () => {
       abortScrapController = null;
       abortScrapController = new AbortController();
 
-      const data = (await $fetch(`api/scrap/${endpoint}`, {
+      const data = (await $fetch(`api/documentsByDay/${endpoint}`, {
         signal: abortScrapController.signal,
       })) as ScrapResponse;
       scrapData.value = data;
     } catch (error: any) {
-      console.error(`Error scraping url: api/scrap/${endpoint}`, error);
+      console.error(
+        `Error scraping url: api/documentsByDay/${endpoint}`,
+        error,
+      );
       scrapError.value =
         'Error al obtener los documentos. Inténtelo de nuevo más tarde.';
       throw error;
@@ -544,6 +550,28 @@ export const useBoeStore = defineStore('boe', () => {
     $resetSelectedDocumentData();
   };
 
+  const scrapMonthDocuments = async (year: number, month: number) => {
+    try {
+      isLoadingMonthScrap.value = true;
+
+      // Format the date to YYYY-MM
+      const monthString = `${year}-${String(month).padStart(2, '0')}`;
+
+      const { documentsPerDay } = await $fetch(
+        `/api/documentsByMonth/${monthString}`,
+      );
+      monthDocuments.value = documentsPerDay;
+
+      return documentsPerDay;
+    } catch (error) {
+      console.error('Error scraping month documents:', error);
+      scrapError.value = 'Error al obtener los documentos del mes';
+      throw error;
+    } finally {
+      isLoadingMonthScrap.value = false;
+    }
+  };
+
   return {
     boesList,
     fetchBoesList,
@@ -585,5 +613,8 @@ export const useBoeStore = defineStore('boe', () => {
     selectedDocumentToAnalyze,
     generateAndPostMissingData,
     getBoeData,
+    monthDocuments,
+    isLoadingMonthScrap,
+    scrapMonthDocuments,
   };
 });

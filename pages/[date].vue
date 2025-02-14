@@ -174,7 +174,8 @@ const {
   selectedDocumentToAnalyze,
 } = storeToRefs(boeStore);
 
-const { fetchBoesList, $resetBoeData, scrapUrl } = boeStore;
+const { fetchBoesList, $resetBoeData, scrapUrl, scrapMonthDocuments } =
+  boeStore;
 
 // Consts
 const route = useRoute();
@@ -273,6 +274,7 @@ onMounted(async () => {
   selectedYear.value = Number((route.params.date as string).split('-')[0]);
 
   await fetchBoesList();
+  await scrapMonthDocuments(selectedYear.value, selectedMonth.value);
   await scrapUrl(route.params.date as string);
 });
 
