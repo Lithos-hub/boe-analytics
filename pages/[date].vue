@@ -163,8 +163,6 @@ const {
   missingData,
   wordsCountAmountMessage,
   wordsCountAmountLevel,
-  selectedMonth,
-  selectedYear,
   isLoadingAreas,
   isLoadingAspects,
   isLoadingKeywords,
@@ -174,8 +172,7 @@ const {
   selectedDocumentToAnalyze,
 } = storeToRefs(boeStore);
 
-const { fetchBoesList, $resetBoeData, scrapUrl, scrapMonthDocuments } =
-  boeStore;
+const { fetchBoesList, $resetBoeData, scrapUrl } = boeStore;
 
 // Consts
 const route = useRoute();
@@ -270,12 +267,7 @@ const copyToClipboard = (text: string) => {
 onMounted(async () => {
   $resetBoeData();
 
-  selectedMonth.value = Number((route.params.date as string).split('-')[1]);
-  selectedYear.value = Number((route.params.date as string).split('-')[0]);
-
-  await fetchBoesList();
-  await scrapMonthDocuments(selectedYear.value, selectedMonth.value);
-  await scrapUrl(route.params.date as string);
+  await Promise.all([fetchBoesList(), scrapUrl(route.params.date as string)]);
 });
 
 watch(route, () => {

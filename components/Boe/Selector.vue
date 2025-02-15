@@ -33,7 +33,7 @@
                 variant="soft"
                 :color="getColorForBoeOption(option)" />
               <small class="text-xs text-primary-200">
-                ({{ option.text.length }} palabras aprox.)
+                ({{ option.text.split(' ').length }} palabras aprox.)
               </small>
             </div>
             <small class="text-primary-200">
