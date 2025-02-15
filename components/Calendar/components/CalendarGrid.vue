@@ -39,26 +39,8 @@
           {{ day }}
         </small>
         <div
-          v-if="
-            hasSomeBoe(formatDate(selectedYear, selectedMonth, day)) &&
-            !isLoadingMonthScrap
-          "
-          class="absolute bottom-1 right-1">
-          <!-- If boe available by date, show green check icon -->
-          <div
-            v-if="hasCompleteBoe(formatDate(selectedYear, selectedMonth, day))"
-            class="h-2 w-2 rounded-full bg-green-500" />
-          <div
-            v-else-if="
-              hasIncompleteBoe(formatDate(selectedYear, selectedMonth, day))
-            "
-            class="h-2 w-2 rounded-full bg-yellow-500" />
-          <div
-            v-else-if="
-              hasNoDocIdBoe(formatDate(selectedYear, selectedMonth, day))
-            "
-            class="h-2 w-2 rounded-full bg-red-500" />
-        </div>
+          v-if="hasSomeBoe(formatDate(selectedYear, selectedMonth, day))"
+          class="absolute bottom-1 right-1 h-1 w-1 rounded-full bg-cyan-500"></div>
       </div>
 
       <div
@@ -80,39 +62,12 @@ const route = useRoute();
 const router = useRouter();
 
 const { showModal } = useModalStore();
-const { isLoadingAnalysis, boesList, isLoadingMonthScrap, monthDocuments } =
-  storeToRefs(useBoeStore());
+const { isLoadingAnalysis, boesList } = storeToRefs(useBoeStore());
 
 const selectedDate = computed(() => route.params.date as string);
 
 const hasSomeBoe = (_date: string) => {
   return boesList.value.some((boe) => boe.date === _date);
-};
-
-const hasCompleteBoe = (_date: string) => {
-  const boesForThisDate = boesList.value.filter((boe) => boe.date === _date);
-  const availableDocumentsForThisDate = monthDocuments.value[_date];
-  return (
-    boesForThisDate.every((boe) => boe.doc_id && boe.has_all_data) &&
-    boesForThisDate.length === availableDocumentsForThisDate
-  );
-};
-
-const hasIncompleteBoe = (_date: string) => {
-  const availableDocumentsForThisDate = monthDocuments.value[_date];
-  return (
-    boesList.value.some(
-      (boe) => boe.date === _date && boe.doc_id && !boe.has_all_data,
-    ) && boesList.value.length !== availableDocumentsForThisDate
-  );
-};
-
-const hasNoDocIdBoe = (_date: string) => {
-  const availableDocumentsForThisDate = monthDocuments.value[_date];
-  return (
-    boesList.value.some((boe) => boe.date === _date && !boe.doc_id) &&
-    boesList.value.length !== availableDocumentsForThisDate
-  );
 };
 
 const handleDayCellClick = (day: number) => {
