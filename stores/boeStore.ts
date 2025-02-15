@@ -22,8 +22,8 @@ interface AvailableScrapedBoe {
 }
 
 export const useBoeStore = defineStore('boe', () => {
-  let abortFetchController: AbortController | null = null;
-  let abortScrapController: AbortController | null = null;
+  let abortFetchControllers: AbortController[] = [];
+  let abortScrapControllers: AbortController[] = [];
 
   // Consts
   const supabaseServices = new SupabaseServices();
@@ -54,13 +54,14 @@ export const useBoeStore = defineStore('boe', () => {
   const keywords = ref<string[]>([]);
   const aspects = ref<Aspect[]>([]);
 
-  const selectedMonth = ref<number>(new Date().getMonth() + 1);
-  const selectedYear = ref<number>(new Date().getFullYear());
+  const selectedMonth = ref<number>(
+    Number((route.params.date as string).split('-')[1]),
+  );
+  const selectedYear = ref<number>(
+    Number((route.params.date as string).split('-')[0]),
+  );
 
   const selectedDocumentToAnalyze = ref<AvailableScrapedBoe>();
-
-  const monthDocuments = ref<Record<string, number>>({});
-  const isLoadingMonthScrap = ref(false);
 
   // Computed
   const isLoadingAnalysis = computed(() => {
@@ -163,18 +164,19 @@ export const useBoeStore = defineStore('boe', () => {
     ),
   );
 
+  const createAndAddAbortController = (controllers: AbortController[]) => {
+    const controller = new AbortController();
+    controllers.push(controller);
+    return controller;
+  };
+
   const scrapUrl = async (endpoint: string) => {
     isLoadingScrap.value = true;
     console.error('Scraping...');
     try {
-      if (abortScrapController) {
-        abortScrapController.abort();
-      }
-      abortScrapController = null;
-      abortScrapController = new AbortController();
-
+      const controller = createAndAddAbortController(abortScrapControllers);
       const data = (await $fetch(`api/documentsByDay/${endpoint}`, {
-        signal: abortScrapController.signal,
+        signal: controller.signal,
       })) as ScrapResponse;
       scrapData.value = data;
     } catch (error: any) {
@@ -292,71 +294,70 @@ export const useBoeStore = defineStore('boe', () => {
   const getAndPostSummary = async (text: string) => {
     try {
       isLoadingSummary.value = true;
-      abortFetchController = new AbortController();
-      const summary = await generateSummary(text, abortFetchController.signal);
+      const controller = createAndAddAbortController(abortFetchControllers);
+      const summary = await generateSummary(text, controller.signal);
       await postBoe(summary as string);
     } catch (error) {
       console.error('Error getting and posting summary:', error);
     } finally {
       isLoadingSummary.value = false;
+      await fetchBoesList();
     }
   };
 
   const getAndPostMainPoints = async (text: string) => {
     try {
       isLoadingMainPoints.value = true;
-      abortFetchController = new AbortController();
-      const mainPoints = await generateMainPoints(
-        text,
-        abortFetchController.signal,
-      );
+      const controller = createAndAddAbortController(abortFetchControllers);
+      const mainPoints = await generateMainPoints(text, controller.signal);
       await postMainPoints(mainPoints as MainPoint[]);
     } catch (error) {
       console.error('Error getting and posting main points:', error);
     } finally {
       isLoadingMainPoints.value = false;
+      await fetchBoesList();
     }
   };
 
   const getAndPostKeywords = async (text: string) => {
     try {
       isLoadingKeywords.value = true;
-      abortFetchController = new AbortController();
-      const keywords = await generateKeywords(
-        text,
-        abortFetchController.signal,
-      );
+      const controller = createAndAddAbortController(abortFetchControllers);
+      const keywords = await generateKeywords(text, controller.signal);
       await postKeywords(keywords as Keyword[]);
     } catch (error) {
       console.error('Error getting and posting keywords:', error);
     } finally {
       isLoadingKeywords.value = false;
+      await fetchBoesList();
     }
   };
 
   const getAndPostAreas = async (text: string) => {
     try {
       isLoadingAreas.value = true;
-      abortFetchController = new AbortController();
-      const areas = await generateAreas(text, abortFetchController.signal);
+      const controller = createAndAddAbortController(abortFetchControllers);
+      const areas = await generateAreas(text, controller.signal);
       await postAreas(areas as Area[]);
     } catch (error) {
       console.error('Error getting and posting areas:', error);
     } finally {
       isLoadingAreas.value = false;
+      await fetchBoesList();
     }
   };
 
   const getAndPostAspects = async (text: string) => {
     try {
       isLoadingAspects.value = true;
-      abortFetchController = new AbortController();
-      const aspects = await generateAspects(text, abortFetchController.signal);
+      const controller = createAndAddAbortController(abortFetchControllers);
+      const aspects = await generateAspects(text, controller.signal);
       await postAspects(aspects as Aspect[]);
     } catch (error) {
       console.error('Error getting and posting aspects:', error);
     } finally {
       isLoadingAspects.value = false;
+      await fetchBoesList();
     }
   };
 
@@ -503,10 +504,6 @@ export const useBoeStore = defineStore('boe', () => {
 
   const getBoeData = async ({ id }: AvailableScrapedBoe) => {
     try {
-      if (abortFetchController) {
-        abortFetchController.abort();
-      }
-      abortFetchController = null;
       $resetSelectedDocumentData();
       initializeLoadingStates();
 
@@ -521,15 +518,34 @@ export const useBoeStore = defineStore('boe', () => {
     } catch (error) {
       console.error('Error in getBoeData:', error);
       resetLoadingStates();
-    } finally {
-      await fetchBoesList();
     }
   };
 
   const abortAnalysis = () => {
-    console.error('Aborting analysis...');
-    abortScrapController?.abort('Scraping stopped by user');
-    abortFetchController?.abort('Analysis stopped by user');
+    console.error('Aborting all analyses...');
+
+    // Abortar todas las llamadas fetch
+    abortFetchControllers.forEach((controller) => {
+      try {
+        controller.abort('Analysis stopped by user');
+      } catch (error) {
+        console.error('Error aborting fetch controller:', error);
+      }
+    });
+
+    // Abortar todas las llamadas scrap
+    abortScrapControllers.forEach((controller) => {
+      try {
+        controller.abort('Scraping stopped by user');
+      } catch (error) {
+        console.error('Error aborting scrap controller:', error);
+      }
+    });
+
+    // Limpiar los arrays de controladores
+    abortFetchControllers = [];
+    abortScrapControllers = [];
+
     resetLoadingStates();
   };
 
@@ -548,28 +564,6 @@ export const useBoeStore = defineStore('boe', () => {
     isLoadingScrap.value = true;
 
     $resetSelectedDocumentData();
-  };
-
-  const scrapMonthDocuments = async (year: number, month: number) => {
-    try {
-      isLoadingMonthScrap.value = true;
-
-      // Format the date to YYYY-MM
-      const monthString = `${year}-${String(month).padStart(2, '0')}`;
-
-      const { documentsPerDay } = await $fetch(
-        `/api/documentsByMonth/${monthString}`,
-      );
-      monthDocuments.value = documentsPerDay;
-
-      return documentsPerDay;
-    } catch (error) {
-      console.error('Error scraping month documents:', error);
-      scrapError.value = 'Error al obtener los documentos del mes';
-      throw error;
-    } finally {
-      isLoadingMonthScrap.value = false;
-    }
   };
 
   return {
@@ -613,8 +607,5 @@ export const useBoeStore = defineStore('boe', () => {
     selectedDocumentToAnalyze,
     generateAndPostMissingData,
     getBoeData,
-    monthDocuments,
-    isLoadingMonthScrap,
-    scrapMonthDocuments,
   };
 });
