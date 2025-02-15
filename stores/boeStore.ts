@@ -58,7 +58,7 @@ export const useBoeStore = defineStore('boe', () => {
     Number((route.params.date as string).split('-')[1]),
   );
   const selectedYear = ref<number>(
-    Number((route.params.date as string).split('-')[0]),
+    Number((route.params.date as string).split('-')[2]),
   );
 
   const selectedDocumentToAnalyze = ref<AvailableScrapedBoe>();
@@ -172,7 +172,7 @@ export const useBoeStore = defineStore('boe', () => {
 
   const scrapUrl = async (endpoint: string) => {
     isLoadingScrap.value = true;
-    console.error('Scraping...');
+    console.error('Scraping...', endpoint);
     try {
       const controller = createAndAddAbortController(abortScrapControllers);
       const data = (await $fetch(`api/documentsByDay/${endpoint}`, {

@@ -6,7 +6,10 @@
       <section class="flex flex-col gap-5" v-if="selectedDocumentToAnalyze">
         <header class="Home__header">
           <h2 class="Home__title">
-            BOE del {{ formattedDate }} - ({{ selectedDocumentToAnalyze.id }})
+            BOE del
+            {{ formatDateToLocaleString(route.params.date as string) }} - ({{
+              selectedDocumentToAnalyze.id
+            }})
           </h2>
           <div class="relative">
             <FeedbackMessage
@@ -267,7 +270,12 @@ const copyToClipboard = (text: string) => {
 onMounted(async () => {
   $resetBoeData();
 
-  await Promise.all([fetchBoesList(), scrapUrl(route.params.date as string)]);
+  const [day, month, year] = (route.params.date as string).split('-');
+
+  await Promise.all([
+    fetchBoesList(),
+    scrapUrl(formatDateToYYYYMMDD(Number(year), Number(month), Number(day))),
+  ]);
 });
 
 watch(route, () => {

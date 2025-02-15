@@ -8,7 +8,8 @@
         <strong class="text-white">
           {{ availableScrapedBoeDocuments.length }}
         </strong>
-        documentos disponibles para el {{ formattedDate }}
+        documentos disponibles para el
+        {{ formatDateToLocaleString(route.params.date as string) }}
       </small>
       <USelectMenu
         v-model="selectedDocumentToAnalyze"

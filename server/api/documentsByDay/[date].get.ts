@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { formatDateForScraping } from '@/utils/dates';
 
 /**
  * Scrapping API call using playwright.
@@ -103,7 +104,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, statusMessage: 'Date is required' });
     }
 
-    const formattedDate = date.replaceAll('-', '/');
+    const formattedDate = formatDateForScraping(date);
 
     // Check if the date is in the correct format (YYYY/MM/DD)
     if (!/^\d{4}\/\d{2}\/\d{2}$/.test(formattedDate)) {

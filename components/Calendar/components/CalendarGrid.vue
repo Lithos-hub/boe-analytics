@@ -21,7 +21,8 @@
           'CalendarGrid__day-cell',
           {
             'CalendarGrid__day-cell--selected':
-              formatDate(selectedYear, selectedMonth, day) === selectedDate,
+              formatDateToYYYYMMDD(selectedYear, selectedMonth, day) ===
+              selectedDate,
             'CalendarGrid__day-cell--disabled': isFutureDate(
               selectedYear,
               selectedMonth,
@@ -39,7 +40,9 @@
           {{ day }}
         </small>
         <div
-          v-if="hasSomeBoe(formatDate(selectedYear, selectedMonth, day))"
+          v-if="
+            hasSomeBoe(formatDateToYYYYMMDD(selectedYear, selectedMonth, day))
+          "
           class="absolute bottom-1 right-1 h-1 w-1 rounded-full bg-cyan-500"></div>
       </div>
 
@@ -64,7 +67,11 @@ const router = useRouter();
 const { showModal } = useModalStore();
 const { isLoadingAnalysis, boesList } = storeToRefs(useBoeStore());
 
-const selectedDate = computed(() => route.params.date as string);
+const selectedDate = computed(() => {
+  const [day, month, year] = (route.params.date as string).split('-');
+
+  return formatDateToYYYYMMDD(Number(year), Number(month), Number(day));
+});
 
 const hasSomeBoe = (_date: string) => {
   return boesList.value.some((boe) => boe.date === _date);
@@ -78,7 +85,9 @@ const handleDayCellClick = (day: number) => {
     return;
   }
 
-  router.push({ path: formatDate(selectedYear, selectedMonth, day) });
+  router.push({
+    path: formatDateToDDMMYYYY(selectedYear, selectedMonth, day),
+  });
 };
 </script>
 
